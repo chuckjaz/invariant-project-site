@@ -112,14 +112,14 @@ Build output directory: dist`;
               </pre>
             </div>
 
-            {/* GitHub Pages / Netlify */}
+            {/* GitHub Pages */}
             <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg space-y-1.5">
               <div className="flex items-center gap-2 font-medium text-slate-200">
-                <FolderGit2 className="h-4 w-4 text-slate-400" />
-                <span>GitHub Pages / Netlify</span>
+                <FolderGit2 className="h-4 w-4 text-emerald-400" />
+                <span>GitHub Pages (Actions Workflow)</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Push the <code className="text-slate-300">dist/</code> folder to any static branch or publish via GitHub Actions.
+                Set repository Pages source to <strong className="text-slate-300">GitHub Actions</strong>. See <code className="text-cyan-300">README.md</code> for the complete <code className="text-slate-300">.github/workflows/deploy.yml</code> template and custom domain DNS configuration.
               </p>
             </div>
           </div>
