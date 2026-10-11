@@ -1,0 +1,6 @@
+{
+  "name": "Invariant Project CLI Auth",
+  "description": "Static OAuth identity verification portal for the Invariant command-line tool.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
