@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Header } from './components/Header';
 import { IdentityAuthCard } from './components/IdentityAuthCard';
 import { IdentityVerifiedScreen } from './components/IdentityVerifiedScreen';
@@ -6,9 +6,10 @@ import { CliSimulatorBar } from './components/CliSimulatorBar';
 import { StaticDeployModal } from './components/StaticDeployModal';
 import { OAuthParams, UserIdentity, IdentityAssertion } from './types/auth';
 import { createIdentityAssertion, generateRandomString } from './utils/crypto';
-import { Shield, Terminal, ArrowUpRight, Cpu } from 'lucide-react';
 
 export default function App() {
+  const logoUrl = '/logo.jpg';
+
   // Parse initial OAuth 2.0 / OIDC parameters from URL search
   const initialParams = useMemo<OAuthParams>(() => {
     if (typeof window === 'undefined') {
@@ -45,7 +46,7 @@ export default function App() {
   }, []);
 
   const [oauthParams, setOAuthParams] = useState<OAuthParams>(initialParams);
-  const [user, setUser] = useState<UserIdentity | null>(null);
+  const [, setUser] = useState<UserIdentity | null>(null);
   const [assertion, setAssertion] = useState<IdentityAssertion | null>(null);
   const [lastTerminalAssertion, setLastTerminalAssertion] = useState<IdentityAssertion | null>(null);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
@@ -103,9 +104,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B0F17] text-slate-100 selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#03091E] text-[#F8FAFC] selection:bg-cyan-400 selection:text-[#03091E]">
       {/* Top Header */}
       <Header
+        logoUrl={logoUrl}
         onOpenDeployGuide={() => setIsDeployGuideOpen(true)}
         onToggleSimulator={() => setIsSimulatorOpen((prev) => !prev)}
         isSimulatorOpen={isSimulatorOpen}
@@ -126,6 +128,7 @@ export default function App() {
         <div className="mx-auto w-full max-w-6xl">
           {assertion ? (
             <IdentityVerifiedScreen
+              logoUrl={logoUrl}
               assertion={assertion}
               oauthParams={oauthParams}
               onReset={handleResetAuth}
@@ -133,6 +136,7 @@ export default function App() {
             />
           ) : (
             <IdentityAuthCard
+              logoUrl={logoUrl}
               oauthParams={oauthParams}
               onSuccess={handleAuthSuccess}
             />
@@ -141,10 +145,16 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-[#0B0F17] py-6 text-xs text-slate-500">
+      <footer className="border-t border-[#162B54]/80 bg-[#03091E] py-6 text-xs text-sky-200/60">
         <div className="mx-auto flex max-w-6xl flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-400">invariantproject.com</span>
+          <div className="flex items-center gap-2.5">
+            <img
+              src={logoUrl}
+              alt="Invariant Project Logo"
+              referrerPolicy="no-referrer"
+              className="h-6 w-6 rounded object-cover border border-cyan-400/30"
+            />
+            <span className="font-semibold text-sky-100">invariantproject.com</span>
             <span>·</span>
             <span>Static OAuth Identity Portal</span>
           </div>
@@ -153,18 +163,18 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsDeployGuideOpen(true)}
-              className="hover:text-slate-300 transition-colors"
+              className="hover:text-cyan-300 transition-colors"
             >
               Static Deployment Specs
             </button>
             <button
               type="button"
               onClick={() => setIsSimulatorOpen(!isSimulatorOpen)}
-              className="hover:text-slate-300 transition-colors"
+              className="hover:text-cyan-300 transition-colors"
             >
               CLI Test Suite
             </button>
-            <span className="font-mono text-slate-600">RFC 8252 / OIDC</span>
+            <span className="font-mono text-emerald-400/80">RFC 8252 / OIDC</span>
           </div>
         </div>
       </footer>
