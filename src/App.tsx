@@ -226,6 +226,16 @@ export default function App() {
               Architecture
             </a>
             <a
+              href="/#repository"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigateHome('repository');
+              }}
+              className="hover:text-cyan-300 transition-colors"
+            >
+              Repositories
+            </a>
+            <a
               href="/#microservices"
               onClick={(e) => {
                 e.preventDefault();

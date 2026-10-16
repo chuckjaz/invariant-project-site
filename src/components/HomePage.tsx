@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Terminal,
   HardDrive,
   Database,
   CloudUpload,
@@ -9,6 +8,7 @@ import {
   Copy,
   Check,
   ExternalLink,
+  GitBranch,
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -90,6 +90,238 @@ const MICROSERVICES: MicroserviceSpec[] = [
   },
 ];
 
+type RepoCategory = 'workflow' | 'review' | 'init' | 'branch' | 'workspace' | 'diagnostics' | 'git';
+
+interface RepoCommandSpec {
+  category: RepoCategory;
+  cmd: string;
+  flags?: string;
+  summary: string;
+}
+
+const REPO_COMMANDS: RepoCommandSpec[] = [
+  // Primary workflow
+  {
+    category: 'workflow',
+    cmd: 'invariant repo change <name>',
+    flags: '-private · -upstream · -tag',
+    summary: 'Create a writable change branch workspace branched from upstream.',
+  },
+  {
+    category: 'workflow',
+    cmd: 'invariant repo status',
+    summary: 'Show working tree file modifications, additions, and deletions relative to the current HEAD commit.',
+  },
+  {
+    category: 'workflow',
+    cmd: 'invariant repo diff [<commit1>] [<commit2>]',
+    flags: '--stat',
+    summary: 'Produce unified diffs of workspace changes or between commits.',
+  },
+  {
+    category: 'workflow',
+    cmd: 'invariant repo sync',
+    flags: '--continue · --abort · -tag',
+    summary: 'Synchronize and rebase the active change workspace onto the latest upstream HEAD via 3-way merge.',
+  },
+  {
+    category: 'workflow',
+    cmd: 'invariant repo log [<path>]',
+    flags: '-tree / -graph · -n <count>',
+    summary: 'Display the commit history log with full DAG history visualization.',
+  },
+  {
+    category: 'workflow',
+    cmd: 'invariant repo commit',
+    flags: '-m <msg> (repeatable) · --amend · --squash <commit> · -tag',
+    summary: 'Snapshot and commit workspace changes to the current branch slot.',
+  },
+  {
+    category: 'workflow',
+    cmd: 'invariant repo submit [<directory>]',
+    flags: '-target · -tag',
+    summary: 'Fast-forward/push changes from the change workspace to the target upstream branch (default main) and retire the workspace.',
+  },
+  {
+    category: 'workflow',
+    cmd: 'invariant repo show [<commit>[:<path>]]',
+    summary: "Inspect commit metadata and diffs, or view a file's contents at a specific commit snapshot.",
+  },
+
+  // Code Review Subcommands (invariant repo review ...)
+  {
+    category: 'review',
+    cmd: 'invariant repo review request [<directory>]',
+    summary: 'Request a code review on the active change branch and emit a review token.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review open <sha|token|name>',
+    flags: '-d <dir> · -writable',
+    summary: 'Open a review workspace for inspection without changing its status.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review start [<sha|token|name>]',
+    flags: '-d <dir> · -writable · -reviewer',
+    summary: 'Transition a review to in_progress and open/mount its workspace.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review comment [<comment-file>]',
+    flags: '-token · -m · -file · -line · -end-line · -author',
+    summary: 'Add structured review comments via a JSON file or command-line flags.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review comments [<identifier>]',
+    flags: '-json',
+    summary: 'Display review comments formatted as markdown with code context or raw JSON.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review approve [<identifier>]',
+    summary: 'Approve a code review and retire the review workspace.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review reject [<identifier>]',
+    summary: 'Reject a code review and retire the review workspace.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review abandon [<identifier>]',
+    summary: 'Abandon a code review and retire the review workspace.',
+  },
+  {
+    category: 'review',
+    cmd: 'invariant repo review update [<identifier>]',
+    summary: 'Update an existing review record with the latest committed changes on the branch.',
+  },
+
+  // Initialization and configuration
+  {
+    category: 'init',
+    cmd: 'invariant repo create <name> [<content>]',
+    flags: '-content · -d · -tag · -create-only · -encrypt · -compress · -writable · -readonly',
+    summary: 'Create a new repository, register it with the Names Service, and initialize the main branch.',
+  },
+  {
+    category: 'init',
+    cmd: 'invariant repo open <name> [<directory>]',
+    flags: '-b / -branch · -d / -directory · -layers · -create-only · -foreground · -writable · -tag',
+    summary: 'Open an existing repository from the Names Service into a layered FUSE workspace.',
+  },
+  {
+    category: 'init',
+    cmd: 'invariant repo config <get|set|unset|list>',
+    flags: '--global',
+    summary: 'Manage repository-scoped or global user configuration settings.',
+  },
+
+  // Branch management
+  {
+    category: 'branch',
+    cmd: 'invariant repo branch [list|delete <name>]',
+    summary: 'List local workspaces, upstream branches, and discovered peer branches, or delete a branch.',
+  },
+  {
+    category: 'branch',
+    cmd: 'invariant repo checkout <branch|peer-branch>',
+    flags: '-writable',
+    summary: 'Switch to or mount a local, upstream, or peer-published change branch.',
+  },
+  {
+    category: 'branch',
+    cmd: 'invariant repo cherry-pick <branch|commit> [<end-commit>]',
+    flags: '-tag',
+    summary: 'Apply commits from another branch or commit range onto the current workspace.',
+  },
+  {
+    category: 'branch',
+    cmd: 'invariant repo rebase [-i] [<upstream>]',
+    summary: 'Interactively edit, reorder, squash, or drop commits in a change branch.',
+  },
+  {
+    category: 'branch',
+    cmd: 'invariant repo tag [create <name> [<commit>]|list|delete <name>]',
+    summary: 'Create, list, or delete immutable release tags.',
+  },
+
+  // Workspace management
+  {
+    category: 'workspace',
+    cmd: 'invariant repo clean',
+    flags: '-f · -d · -x',
+    summary: 'Purge untracked and temporary files from the workspace.',
+  },
+  {
+    category: 'workspace',
+    cmd: 'invariant repo layer <add <repo_name> <mount_path> [--commit=<sha>]|list|remove <mount_path>>',
+    summary: 'Manage pinned sub-repository dependency layers inside the workspace.',
+  },
+  {
+    category: 'workspace',
+    cmd: 'invariant repo restore [<path>]',
+    flags: '-source <commit> (defaults to HEAD)',
+    summary: 'Discard uncommitted local edits and restore files from a commit snapshot.',
+  },
+  {
+    category: 'workspace',
+    cmd: 'invariant repo revert <commit>',
+    flags: '-tag',
+    summary: 'Apply the inverse patch of a commit and record a new revert commit.',
+  },
+  {
+    category: 'workspace',
+    cmd: 'invariant repo stash [push [-m <msg>]|pop|list|drop [<index>]]',
+    summary: 'Shelve and restore uncommitted local changes to and from temporary CAS commits.',
+  },
+  {
+    category: 'workspace',
+    cmd: 'invariant repo mount <name> [<directory>]',
+    summary: 'Mount an existing repository workspace.',
+  },
+  {
+    category: 'workspace',
+    cmd: 'invariant repo unmount [<directory>]',
+    summary: 'Unmount a repository workspace and its nested workspaces.',
+  },
+
+  // Diagnostics
+  {
+    category: 'diagnostics',
+    cmd: 'invariant repo blame <file>',
+    flags: '-commit <hash>',
+    summary: 'Show line-by-line commit and author attribution for a file.',
+  },
+  {
+    category: 'diagnostics',
+    cmd: 'invariant repo grep <pattern> [<path>]',
+    flags: '-i · -n · -commit <hash>',
+    summary: 'Search for patterns across commit trees stored in CAS.',
+  },
+  {
+    category: 'diagnostics',
+    cmd: 'invariant repo bisect <start [<bad> [<good>]]|bad [<commit>]|good [<commit>]|reset|run <cmd> [args...]>',
+    summary: 'Perform binary search across commit history to isolate regressions.',
+  },
+
+  // Git Import / Export
+  {
+    category: 'git',
+    cmd: 'invariant repo git import [<git-dir>]',
+    flags: '-repository / -repo · -branch · -directory / -d · -depth · -writable · -tag',
+    summary: 'Import commit history and file trees from a Git repository into Invariant CAS.',
+  },
+  {
+    category: 'git',
+    cmd: 'invariant repo git export <target-git-dir>',
+    flags: '-branch · -from <commit>',
+    summary: 'Export Invariant commits and file trees to a Git repository.',
+  },
+];
+
 const CLI_SUBCOMMANDS = [
   {
     cmd: 'invariant start services.yaml',
@@ -127,6 +359,11 @@ const CLI_SUBCOMMANDS = [
     cmd: 'invariant workspace create | mount | unmount | pull',
     summary:
       'Manage layered workspaces (.invariant-workspace / .invariant-layer) separating persistent core network files from transient local build directories with ~/.cache/invariant caching and offline overflow.',
+  },
+  {
+    cmd: 'invariant repository (or invariant repo)',
+    summary:
+      'Manage CAS-backed version control repositories, isolated FUSE branch workspaces, 3-way merges, code reviews, dependency layers, and bidirectional Git import/export.',
   },
   {
     cmd: 'invariant print -s <slot_or_content_link>/path/to/file',
@@ -226,6 +463,7 @@ services:
       - distribute`;
 
 export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
+  const [activeRepoCategory, setActiveRepoCategory] = useState<RepoCategory>('workflow');
   const [activeCodeTab, setActiveCodeTab] = useState<'cli' | 'exec' | 'yaml' | 'docker'>('cli');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
@@ -236,6 +474,10 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const filteredRepoCommands = REPO_COMMANDS.filter(
+    (item) => item.category === activeRepoCategory
+  );
+
   return (
     <div className="w-full space-y-20 pb-12">
       {/* 1. Hero Section */}
@@ -244,23 +486,23 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
             {/* Left Column: Core Proposition */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="flex items-center gap-2 text-xs font-mono text-cyan-300">
-                <span>Content-Addressed Distributed Storage</span>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-cyan-300">
+                <span>Content-Addressed Storage</span>
                 <span aria-hidden="true" className="text-[#162B54]">·</span>
                 <span>FUSE &amp; Native NFS</span>
                 <span aria-hidden="true" className="text-[#162B54]">·</span>
-                <span>Ed25519 Slots</span>
+                <span>CAS Version Control &amp; Code Review</span>
               </div>
 
               <h1
                 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.12]"
                 style={{ textWrap: 'balance' }}
               >
-                Content-Addressing Storage &amp; Layered File System
+                Content-Addressing Storage, Layered File System &amp; Version Control
               </h1>
 
               <p className="text-base text-sky-100/80 leading-relaxed max-w-2xl">
-                The Invariant Project is a distributed, content-addressing storage architecture for arbitrary data. Upload directories, retrieve immutable trees via cryptographic content links, and mount live volumes across workstations via FUSE or native NFS.
+                The Invariant Project is a distributed, content-addressing storage architecture for arbitrary data. Upload directories, mount live layered file systems via FUSE or native NFS, and manage distributed version control repositories and code reviews stored directly in CAS without a local <code className="text-cyan-300 font-mono">.git</code> directory.
               </p>
 
               {/* Primary & Secondary Actions */}
@@ -276,15 +518,15 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                 </a>
 
                 <a
-                  href="#cli"
+                  href="#repository"
                   onClick={(e) => {
                     e.preventDefault();
-                    document.getElementById('cli')?.scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('repository')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#07112B] hover:bg-[#0B1838] border border-[#162B54] hover:border-cyan-400/50 text-sky-100 text-sm font-medium transition-colors whitespace-nowrap shrink-0"
                 >
-                  <Terminal className="h-4 w-4 text-cyan-400" />
-                  <span>Explore CLI &amp; Cluster Config</span>
+                  <GitBranch className="h-4 w-4 text-emerald-400" />
+                  <span>Explore Repository &amp; VCS</span>
                 </a>
               </div>
 
@@ -295,8 +537,8 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                   <div className="text-sky-200/60 mt-0.5">Independently replaceable</div>
                 </div>
                 <div>
-                  <div className="font-mono font-semibold text-emerald-300 tabular-nums">Ed25519 / 256-bit</div>
-                  <div className="text-sky-200/60 mt-0.5">Protected mutable slots</div>
+                  <div className="font-mono font-semibold text-emerald-300 tabular-nums">CAS Repositories</div>
+                  <div className="text-sky-200/60 mt-0.5">Branching, reviews &amp; Git sync</div>
                 </div>
                 <div>
                   <div className="font-mono font-semibold text-sky-300 tabular-nums">FUSE &amp; NFS :2049</div>
@@ -329,21 +571,21 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
 
                   <div className="w-full rounded-xl bg-[#03091E] border border-[#162B54] p-4 text-left font-mono text-xs space-y-2">
                     <div className="flex items-center justify-between text-[11px] text-sky-300/60 border-b border-[#162B54] pb-2">
-                      <span>Quick Start · Local Cluster</span>
+                      <span>Quick Start · Cluster &amp; Repo</span>
                       <span className="text-emerald-400">~/.invariant/config.yaml</span>
                     </div>
                     <div className="text-sky-100 space-y-1 text-[11px]">
                       <div>
-                        <span className="text-cyan-400">$</span> ./build
-                      </div>
-                      <div>
                         <span className="text-cyan-400">$</span> go run ./cmd/invariant start services.yaml
                       </div>
                       <div>
-                        <span className="text-cyan-400">$</span> invariant upload ./project --slot main-workspace --compress --encrypt
+                        <span className="text-cyan-400">$</span> invariant repo create my-repo ./src
                       </div>
                       <div>
-                        <span className="text-cyan-400">$</span> invariant mount /mnt/project
+                        <span className="text-cyan-400">$</span> invariant repo change feat-branch
+                      </div>
+                      <div>
+                        <span className="text-cyan-400">$</span> invariant repo commit -m &quot;Update storage&quot;
                       </div>
                     </div>
                   </div>
@@ -359,7 +601,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
         <div className="mb-8">
           <div className="text-xs font-mono text-cyan-400 mb-2">Core Architecture</div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Designed for Resilient Distributed Storage
+            Five Foundational Subsystems
           </h2>
         </div>
 
@@ -430,12 +672,46 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
             </div>
           </div>
 
-          {/* 03. Automatic Backup & Incremental Recovery */}
+          {/* 03. Version Control Repository (Full 3-column Span Highlight) */}
+          <div className="lg:col-span-3 bg-[#07112B] border border-cyan-400/35 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <div className="lg:col-span-7 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-mono text-emerald-300">
+                  <GitBranch className="h-4 w-4 text-cyan-400" />
+                  <span>03. Version Control Repository &amp; Integrated Code Review</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white">
+                  Distributed Version Control Built Natively on CAS &amp; FUSE Workspaces
+                </h3>
+                <p className="text-sm text-sky-100/80 leading-relaxed">
+                  Built directly on top of Invariant&apos;s content-addressable storage, mutable slots, names service, and layered FUSE workspaces. Commits, file trees, and blobs are stored directly in CAS rather than a local <code className="text-cyan-300 font-mono">.git</code> directory, and branches and change sets are mounted as isolated workspaces.
+                </p>
+              </div>
+
+              <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-[#03091E] border border-[#162B54]">
+                  <div className="font-semibold text-cyan-300 mb-1">Isolated Change Workspaces</div>
+                  <p className="text-sky-200/70 leading-relaxed">
+                    Mount branches and peer change sets instantaneously via FUSE with 3-way merge, interactive rebase, cherry-pick, and sub-repository dependency layers.
+                  </p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-[#03091E] border border-[#162B54]">
+                  <div className="font-semibold text-emerald-300 mb-1">Code Reviews &amp; Git Sync</div>
+                  <p className="text-sky-200/70 leading-relaxed">
+                    First-class review tokens, inline file/line comments, approval workflows, plus bidirectional <code className="text-cyan-300 font-mono">git import</code> and <code className="text-cyan-300 font-mono">git export</code>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 04. Automatic Backup & Incremental Recovery */}
           <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono text-sky-300">
-                  03. Cloud Backup &amp; Recovery
+                  04. Cloud Backup &amp; Recovery
                 </span>
                 <CloudUpload className="h-5 w-5 text-sky-400" />
               </div>
@@ -452,12 +728,12 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
             </div>
           </div>
 
-          {/* 04. Dynamic Multi-Device Replication (Spans 2 columns) */}
+          {/* 05. Dynamic Multi-Device Replication (Spans 2 columns) */}
           <div className="lg:col-span-2 bg-[#07112B] border border-[#162B54] rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono text-emerald-300">
-                  04. Dynamic Multi-Device Replication
+                  05. Dynamic Multi-Device Replication
                 </span>
                 <Network className="h-5 w-5 text-emerald-400" />
               </div>
@@ -479,7 +755,99 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
         </div>
       </section>
 
-      {/* 3. Microservices Architecture & Security Boundary */}
+      {/* 3. Dedicated Version Control Repository (invariant repo) Interactive Explorer */}
+      <section id="repository" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="text-xs font-mono text-emerald-400 mb-2">
+              invariant repository · invariant repo
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              CAS Version Control &amp; Code Review Workflow
+            </h2>
+          </div>
+          <a
+            href="https://github.com/chuckjaz/invariant-go/blob/main/docs/Repository.md"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-300 hover:text-emerald-300 transition-colors shrink-0"
+          >
+            <span>docs/Repository.md</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+
+        {/* Category Filter Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#07112B] border border-[#162B54] rounded-xl">
+          {(
+            [
+              { id: 'workflow', label: 'Primary Workflow' },
+              { id: 'review', label: 'Code Reviews' },
+              { id: 'init', label: 'Init & Config' },
+              { id: 'branch', label: 'Branch Management' },
+              { id: 'workspace', label: 'Workspace & Layers' },
+              { id: 'diagnostics', label: 'Diagnostics (blame/grep/bisect)' },
+              { id: 'git', label: 'Git Import / Export' },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveRepoCategory(tab.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
+                activeRepoCategory === tab.id
+                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
+                  : 'text-sky-200/70 hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Filtered Repository Commands Grid */}
+        <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {filteredRepoCommands.map((item) => (
+              <div
+                key={item.cmd}
+                className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] flex flex-col justify-between gap-2.5"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <code className="text-xs font-mono font-semibold text-cyan-300 break-all">
+                      {item.cmd}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(item.cmd, item.cmd)}
+                      className="text-sky-300/60 hover:text-cyan-300 p-1 shrink-0 transition-colors"
+                      title="Copy command"
+                    >
+                      {copiedId === item.cmd ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-sky-100/80 leading-relaxed">
+                    {item.summary}
+                  </p>
+                </div>
+
+                {item.flags && (
+                  <div className="pt-2 border-t border-[#162B54]/70 text-[11px] font-mono text-emerald-300/90">
+                    Flags: {item.flags}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Microservices Architecture & Security Boundary */}
       <section id="microservices" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
@@ -556,7 +924,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
         </div>
       </section>
 
-      {/* 4. Interactive CLI Utility & Cluster Configuration Reference */}
+      {/* 5. Interactive CLI Utility & Cluster Configuration Reference */}
       <section id="cli" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -624,7 +992,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                   The <code className="text-cyan-300 font-mono">invariant</code> CLI Utility
                 </h3>
                 <p className="text-xs text-sky-200/70 mt-0.5">
-                  Reads global configuration from <code className="text-emerald-300 font-mono">~/.invariant/config.yaml</code> and orchestrates cluster storage, slots, mounts, and layered workspaces.
+                  Reads global configuration from <code className="text-emerald-300 font-mono">~/.invariant/config.yaml</code> and orchestrates cluster storage, slots, mounts, layered workspaces, and CAS version control repositories.
                 </p>
               </div>
             </div>

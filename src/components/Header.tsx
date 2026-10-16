@@ -65,6 +65,16 @@ export const Header: React.FC<HeaderProps> = ({
             Architecture
           </a>
           <a
+            href="/#repository"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateHome('repository');
+            }}
+            className="hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0"
+          >
+            Repositories
+          </a>
+          <a
             href="/#microservices"
             onClick={(e) => {
               e.preventDefault();
