@@ -136,10 +136,10 @@ npm run preview
 
 ## CLI Integration Protocol
 
-The `invariant` command-line tool initiates the flow by launching the user's browser with standard OAuth 2.0 / OIDC parameters:
+The `invariant` command-line tool initiates the flow by launching the user's browser to the `/auth` subpage with standard OAuth 2.0 / OIDC parameters:
 
 ```bash
-https://invariantproject.com/?client_id=invariant-cli&redirect_uri=http://localhost:8085/callback&state=<RANDOM_STATE>&nonce=<RANDOM_NONCE>&response_type=code
+https://invariantproject.com/auth?client_id=invariant-cli&redirect_uri=http://localhost:8085/callback&state=<RANDOM_STATE>&nonce=<RANDOM_NONCE>&response_type=code
 ```
 
 ### Parameter Reference

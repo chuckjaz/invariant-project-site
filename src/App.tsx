@@ -1,14 +1,32 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from './components/Header';
+import { HomePage } from './components/HomePage';
 import { IdentityAuthCard } from './components/IdentityAuthCard';
 import { IdentityVerifiedScreen } from './components/IdentityVerifiedScreen';
 import { CliSimulatorBar } from './components/CliSimulatorBar';
-import { StaticDeployModal } from './components/StaticDeployModal';
 import { OAuthParams, UserIdentity, IdentityAssertion } from './types/auth';
 import { createIdentityAssertion, generateRandomString } from './utils/crypto';
 
+function resolveCurrentPage(): 'home' | 'auth' {
+  if (typeof window === 'undefined') return 'home';
+  const pathname = window.location.pathname.replace(/\/+$/, '');
+  const hash = window.location.hash;
+  if (
+    pathname === '/auth' ||
+    pathname.endsWith('/auth') ||
+    pathname.endsWith('/auth/index.html') ||
+    hash.startsWith('#/auth') ||
+    hash === '#auth'
+  ) {
+    return 'auth';
+  }
+  return 'home';
+}
+
 export default function App() {
   const logoUrl = '/logo.jpg';
+
+  const [currentPage, setCurrentPage] = useState<'home' | 'auth'>(resolveCurrentPage);
 
   // Parse initial OAuth 2.0 / OIDC parameters from URL search
   const initialParams = useMemo<OAuthParams>(() => {
@@ -49,12 +67,21 @@ export default function App() {
   const [, setUser] = useState<UserIdentity | null>(null);
   const [assertion, setAssertion] = useState<IdentityAssertion | null>(null);
   const [lastTerminalAssertion, setLastTerminalAssertion] = useState<IdentityAssertion | null>(null);
-  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
-  const [isDeployGuideOpen, setIsDeployGuideOpen] = useState(false);
+  const [isSimulatorOpen] = useState(false);
 
-  // Update URL search query without triggering page reload
+  // Sync browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPage(resolveCurrentPage());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update URL search query on /auth without triggering page reload
   const updateUrlParams = useCallback((params: OAuthParams) => {
     const url = new URL(window.location.href);
+    url.pathname = '/auth';
     if (params.clientId) url.searchParams.set('client_id', params.clientId);
     if (params.redirectUri) url.searchParams.set('redirect_uri', params.redirectUri);
     else url.searchParams.delete('redirect_uri');
@@ -63,6 +90,20 @@ export default function App() {
     else url.searchParams.delete('nonce');
 
     window.history.replaceState({}, '', url.toString());
+  }, []);
+
+  const handleNavigateHome = useCallback((sectionHash?: string) => {
+    setCurrentPage('home');
+    const targetUrl = sectionHash ? `/#${sectionHash}` : '/';
+    window.history.pushState({}, '', targetUrl);
+    if (sectionHash) {
+      setTimeout(() => {
+        const el = document.getElementById(sectionHash);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, []);
 
   const handleUpdateParams = (newParams: Partial<OAuthParams>) => {
@@ -108,13 +149,11 @@ export default function App() {
       {/* Top Header */}
       <Header
         logoUrl={logoUrl}
-        onOpenDeployGuide={() => setIsDeployGuideOpen(true)}
-        onToggleSimulator={() => setIsSimulatorOpen((prev) => !prev)}
-        isSimulatorOpen={isSimulatorOpen}
+        onNavigateHome={handleNavigateHome}
       />
 
-      {/* Collapsible CLI Test Simulator Drawer */}
-      {isSimulatorOpen && (
+      {/* Collapsible CLI Test Simulator Drawer (only when /auth is active) */}
+      {currentPage === 'auth' && isSimulatorOpen && (
         <CliSimulatorBar
           oauthParams={oauthParams}
           onUpdateParams={handleUpdateParams}
@@ -124,25 +163,31 @@ export default function App() {
       )}
 
       {/* Main Viewport Content */}
-      <main className="flex-1 flex flex-col justify-center px-4 py-8 sm:py-12">
-        <div className="mx-auto w-full max-w-6xl">
-          {assertion ? (
-            <IdentityVerifiedScreen
-              logoUrl={logoUrl}
-              assertion={assertion}
-              oauthParams={oauthParams}
-              onReset={handleResetAuth}
-              onSimulateLoopbackReceipt={(asst) => setLastTerminalAssertion(asst)}
-            />
-          ) : (
-            <IdentityAuthCard
-              logoUrl={logoUrl}
-              oauthParams={oauthParams}
-              onSuccess={handleAuthSuccess}
-            />
-          )}
-        </div>
-      </main>
+      {currentPage === 'home' ? (
+        <main className="flex-1">
+          <HomePage logoUrl={logoUrl} />
+        </main>
+      ) : (
+        <main className="flex-1 flex flex-col justify-center px-4 py-8 sm:py-12">
+          <div className="mx-auto w-full max-w-6xl">
+            {assertion ? (
+              <IdentityVerifiedScreen
+                logoUrl={logoUrl}
+                assertion={assertion}
+                oauthParams={oauthParams}
+                onReset={handleResetAuth}
+                onSimulateLoopbackReceipt={(asst) => setLastTerminalAssertion(asst)}
+              />
+            ) : (
+              <IdentityAuthCard
+                logoUrl={logoUrl}
+                oauthParams={oauthParams}
+                onSuccess={handleAuthSuccess}
+              />
+            )}
+          </div>
+        </main>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-[#162B54]/80 bg-[#03091E] py-6 text-xs text-sky-200/60">
@@ -156,34 +201,51 @@ export default function App() {
             />
             <span className="font-semibold text-sky-100">invariantproject.com</span>
             <span>·</span>
-            <span>Static OAuth Identity Portal</span>
+            <span>Content-Addressed Distributed Storage</span>
           </div>
 
           <div className="flex items-center gap-6 text-[11px]">
-            <button
-              type="button"
-              onClick={() => setIsDeployGuideOpen(true)}
+            <a
+              href="/#overview"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigateHome('overview');
+              }}
               className="hover:text-cyan-300 transition-colors"
             >
-              Static Deployment Specs
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsSimulatorOpen(!isSimulatorOpen)}
+              Overview
+            </a>
+            <a
+              href="/#capabilities"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigateHome('capabilities');
+              }}
               className="hover:text-cyan-300 transition-colors"
             >
-              CLI Test Suite
-            </button>
-            <span className="font-mono text-emerald-400/80">RFC 8252 / OIDC</span>
+              Architecture
+            </a>
+            <a
+              href="/#microservices"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigateHome('microservices');
+              }}
+              className="hover:text-cyan-300 transition-colors"
+            >
+              Microservices
+            </a>
+            <a
+              href="https://github.com/chuckjaz/invariant-go"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-cyan-300 transition-colors"
+            >
+              GitHub
+            </a>
           </div>
         </div>
       </footer>
-
-      {/* Static Deployment Guide Modal */}
-      <StaticDeployModal
-        isOpen={isDeployGuideOpen}
-        onClose={() => setIsDeployGuideOpen(false)}
-      />
     </div>
   );
 }

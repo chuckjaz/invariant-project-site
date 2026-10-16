@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import { BookOpen, ExternalLink, SlidersHorizontal } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 interface HeaderProps {
   logoUrl: string;
-  onOpenDeployGuide: () => void;
-  onToggleSimulator: () => void;
-  isSimulatorOpen: boolean;
+  onNavigateHome: (sectionHash?: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   logoUrl,
-  onOpenDeployGuide,
-  onToggleSimulator,
-  isSimulatorOpen,
+  onNavigateHome,
 }) => {
   const [imgError, setImgError] = useState(false);
 
@@ -22,6 +18,10 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Zone 1: Brand wordmark with uploaded logo */}
         <a
           href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigateHome();
+          }}
           className="flex items-center gap-3 text-base font-semibold tracking-tight text-[#F8FAFC] whitespace-nowrap shrink-0 hover:text-cyan-300 transition-colors"
         >
           {!imgError ? (
@@ -42,45 +42,61 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </a>
 
-        {/* Zone 2: Navigation Links */}
+        {/* Zone 2: Single-Line Navigation Links */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-sky-200/70">
-          <button
-            type="button"
-            onClick={onOpenDeployGuide}
-            className="flex items-center gap-1.5 hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0"
-          >
-            <BookOpen className="h-4 w-4 text-cyan-400" />
-            <span>Static Hosting Guide</span>
-          </button>
           <a
-            href="https://invariantproject.com"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0"
+            href="/#overview"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateHome('overview');
+            }}
+            className="hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0"
           >
-            <span>Documentation</span>
-            <ExternalLink className="h-3.5 w-3.5 text-sky-400/60" />
+            Overview
           </a>
-          <span className="text-[#162B54] select-none">/</span>
-          <span className="text-xs text-emerald-400 font-mono whitespace-nowrap shrink-0">
-            CLI Identity Auth
-          </span>
+          <a
+            href="/#capabilities"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateHome('capabilities');
+            }}
+            className="hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0"
+          >
+            Architecture
+          </a>
+          <a
+            href="/#microservices"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateHome('microservices');
+            }}
+            className="hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0"
+          >
+            Microservices
+          </a>
+          <a
+            href="/#cli"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateHome('cli');
+            }}
+            className="hover:text-cyan-300 transition-colors whitespace-nowrap shrink-0"
+          >
+            CLI &amp; Config
+          </a>
         </nav>
 
         {/* Zone 3: 1 Primary Action */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={onToggleSimulator}
-            className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium rounded-lg border transition-all whitespace-nowrap shrink-0 ${
-              isSimulatorOpen
-                ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] border-cyan-300 font-semibold shadow-sm shadow-cyan-500/20'
-                : 'bg-[#07112B] text-sky-100 border-[#162B54] hover:border-cyan-400/50 hover:text-cyan-300'
-            }`}
+          <a
+            href="https://github.com/chuckjaz/invariant-go"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] shadow-sm shadow-cyan-500/20 hover:opacity-95 transition-opacity whitespace-nowrap shrink-0"
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span>{isSimulatorOpen ? 'Hide CLI Simulator' : 'Simulate CLI'}</span>
-          </button>
+            <span>View on GitHub</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         </div>
       </div>
     </header>

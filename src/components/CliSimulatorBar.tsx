@@ -185,7 +185,7 @@ export const CliSimulatorBar: React.FC<CliSimulatorBarProps> = ({
               </div>
             )}
             <div className="text-sky-300/50">
-              [CLI] Opening browser to https://invariantproject.com/login?client_id={oauthParams.clientId}...
+              [CLI] Opening browser to https://invariantproject.com/auth?client_id={oauthParams.clientId}...
             </div>
 
             {lastAssertion ? (
