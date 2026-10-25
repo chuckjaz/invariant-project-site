@@ -70,7 +70,7 @@ export const IdentityAuthCard: React.FC<IdentityAuthCardProps> = ({
             Verify Invariant Identity
           </h1>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Select an authorized OAuth identity provider to authenticate the <code className="text-slate-300">invariant</code> CLI on this workstation.
+            Authenticate via OAuth 2.0 to validate your email identity for <code className="text-slate-300">invariant login</code>.
           </p>
         </div>
 
@@ -166,7 +166,7 @@ export const IdentityAuthCard: React.FC<IdentityAuthCardProps> = ({
         <div className="mt-6 pt-5 border-t border-slate-800/80 flex items-start gap-2.5 text-slate-400">
           <ShieldCheck className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
           <p className="text-[11px] leading-relaxed">
-            <strong className="text-slate-300">User Identification Only:</strong> The OAuth flow verifies who you are. All permissions and access tokens for Invariant services are governed internally by Invariant upon receipt of this identity assertion.
+            <strong className="text-slate-300">OAuth2 + Invitation Binding:</strong> <code className="text-slate-300">invariant login</code> validates your OAuth2 credentials, and <code className="text-slate-300">invariant invite redeem</code> verifies that your authenticated email matches your single-use control plane invitation (<code className="text-slate-300">inv_invite_...@itp://...</code>) before issuing a WireGuard-pinned access token.
           </p>
         </div>
       </div>
