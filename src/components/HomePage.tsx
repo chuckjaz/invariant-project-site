@@ -103,118 +103,118 @@ const REPO_COMMANDS: RepoCommandSpec[] = [
   // Primary workflow
   {
     category: 'workflow',
-    cmd: 'invariant repo change <name>',
+    cmd: 'ir change <name>',
     flags: '-private · -upstream · -tag',
     summary: 'Create a writable change branch workspace branched from upstream.',
   },
   {
     category: 'workflow',
-    cmd: 'invariant repo status',
+    cmd: 'ir status',
     summary: 'Show working tree file modifications, additions, and deletions relative to the current HEAD commit.',
   },
   {
     category: 'workflow',
-    cmd: 'invariant repo diff [<commit1>] [<commit2>]',
+    cmd: 'ir diff [<commit1>] [<commit2>]',
     flags: '--stat',
     summary: 'Produce unified diffs of workspace changes or between commits.',
   },
   {
     category: 'workflow',
-    cmd: 'invariant repo sync',
+    cmd: 'ir sync',
     flags: '--continue · --abort · -tag',
     summary: 'Synchronize and rebase the active change workspace onto the latest upstream HEAD via 3-way merge.',
   },
   {
     category: 'workflow',
-    cmd: 'invariant repo log [<path>]',
+    cmd: 'ir log [<path>]',
     flags: '-tree / -graph · -n <count>',
     summary: 'Display the commit history log with full DAG history visualization.',
   },
   {
     category: 'workflow',
-    cmd: 'invariant repo commit',
+    cmd: 'ir commit',
     flags: '-m <msg> (repeatable) · --amend · --squash <commit> · -tag',
     summary: 'Snapshot and commit workspace changes to the current branch slot.',
   },
   {
     category: 'workflow',
-    cmd: 'invariant repo submit [<directory>]',
+    cmd: 'ir submit [<directory>]',
     flags: '-target · -tag',
     summary: 'Fast-forward/push changes from the change workspace to the target upstream branch (default main) and retire the workspace.',
   },
   {
     category: 'workflow',
-    cmd: 'invariant repo show [<commit>[:<path>]]',
+    cmd: 'ir show [<commit>[:<path>]]',
     summary: "Inspect commit metadata and diffs, or view a file's contents at a specific commit snapshot.",
   },
 
-  // Code Review Subcommands (invariant repo review ...)
+  // Code Review Subcommands (ir review ...)
   {
     category: 'review',
-    cmd: 'invariant repo review request [<directory>]',
+    cmd: 'ir review request [<directory>]',
     summary: 'Request a code review on the active change branch and emit a review token.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review open <sha|token|name>',
+    cmd: 'ir review open <sha|token|name>',
     flags: '-d <dir> · -writable',
     summary: 'Open a review workspace for inspection without changing its status.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review start [<sha|token|name>]',
+    cmd: 'ir review start [<sha|token|name>]',
     flags: '-d <dir> · -writable · -reviewer',
     summary: 'Transition a review to in_progress and open/mount its workspace.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review comment [<comment-file>]',
+    cmd: 'ir review comment [<comment-file>]',
     flags: '-token · -m · -file · -line · -end-line · -author',
     summary: 'Add structured review comments via a JSON file or command-line flags.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review comments [<identifier>]',
+    cmd: 'ir review comments [<identifier>]',
     flags: '-json',
     summary: 'Display review comments formatted as markdown with code context or raw JSON.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review approve [<identifier>]',
+    cmd: 'ir review approve [<identifier>]',
     summary: 'Approve a code review and retire the review workspace.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review reject [<identifier>]',
+    cmd: 'ir review reject [<identifier>]',
     summary: 'Reject a code review and retire the review workspace.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review abandon [<identifier>]',
+    cmd: 'ir review abandon [<identifier>]',
     summary: 'Abandon a code review and retire the review workspace.',
   },
   {
     category: 'review',
-    cmd: 'invariant repo review update [<identifier>]',
+    cmd: 'ir review update [<identifier>]',
     summary: 'Update an existing review record with the latest committed changes on the branch.',
   },
 
   // Initialization and configuration
   {
     category: 'init',
-    cmd: 'invariant repo create <name> [<content>]',
+    cmd: 'ir create <name> [<content>]',
     flags: '-content · -d · -tag · -create-only · -encrypt · -compress · -writable · -readonly',
     summary: 'Create a new repository, register it with the Names Service, and initialize the main branch.',
   },
   {
     category: 'init',
-    cmd: 'invariant repo open <name> [<directory>]',
+    cmd: 'ir open <name> [<directory>]',
     flags: '-b / -branch · -d / -directory · -layers · -create-only · -foreground · -writable · -tag',
     summary: 'Open an existing repository from the Names Service into a layered FUSE workspace.',
   },
   {
     category: 'init',
-    cmd: 'invariant repo config <get|set|unset|list>',
+    cmd: 'ir config <get|set|unset|list>',
     flags: '--global',
     summary: 'Manage repository-scoped or global user configuration settings.',
   },
@@ -222,101 +222,101 @@ const REPO_COMMANDS: RepoCommandSpec[] = [
   // Branch management
   {
     category: 'branch',
-    cmd: 'invariant repo branch [list|delete <name>]',
+    cmd: 'ir branch [list|delete <name>]',
     summary: 'List local workspaces, upstream branches, and discovered peer branches, or delete a branch.',
   },
   {
     category: 'branch',
-    cmd: 'invariant repo checkout <branch|peer-branch>',
+    cmd: 'ir checkout <branch|peer-branch>',
     flags: '-writable',
     summary: 'Switch to or mount a local, upstream, or peer-published change branch.',
   },
   {
     category: 'branch',
-    cmd: 'invariant repo cherry-pick <branch|commit> [<end-commit>]',
+    cmd: 'ir cherry-pick <branch|commit> [<end-commit>]',
     flags: '-tag',
     summary: 'Apply commits from another branch or commit range onto the current workspace.',
   },
   {
     category: 'branch',
-    cmd: 'invariant repo rebase [-i] [<upstream>]',
+    cmd: 'ir rebase [-i] [<upstream>]',
     summary: 'Interactively edit, reorder, squash, or drop commits in a change branch.',
   },
   {
     category: 'branch',
-    cmd: 'invariant repo tag [create <name> [<commit>]|list|delete <name>]',
+    cmd: 'ir tag [create <name> [<commit>]|list|delete <name>]',
     summary: 'Create, list, or delete immutable release tags.',
   },
 
   // Workspace management
   {
     category: 'workspace',
-    cmd: 'invariant repo clean',
+    cmd: 'ir clean',
     flags: '-f · -d · -x',
     summary: 'Purge untracked and temporary files from the workspace.',
   },
   {
     category: 'workspace',
-    cmd: 'invariant repo layer <add <repo_name> <mount_path> [--commit=<sha>]|list|remove <mount_path>>',
+    cmd: 'ir layer <add <repo_name> <mount_path> [--commit=<sha>]|list|remove <mount_path>>',
     summary: 'Manage pinned sub-repository dependency layers inside the workspace.',
   },
   {
     category: 'workspace',
-    cmd: 'invariant repo restore [<path>]',
+    cmd: 'ir restore [<path>]',
     flags: '-source <commit> (defaults to HEAD)',
     summary: 'Discard uncommitted local edits and restore files from a commit snapshot.',
   },
   {
     category: 'workspace',
-    cmd: 'invariant repo revert <commit>',
+    cmd: 'ir revert <commit>',
     flags: '-tag',
     summary: 'Apply the inverse patch of a commit and record a new revert commit.',
   },
   {
     category: 'workspace',
-    cmd: 'invariant repo stash [push [-m <msg>]|pop|list|drop [<index>]]',
+    cmd: 'ir stash [push [-m <msg>]|pop|list|drop [<index>]]',
     summary: 'Shelve and restore uncommitted local changes to and from temporary CAS commits.',
   },
   {
     category: 'workspace',
-    cmd: 'invariant repo mount <name> [<directory>]',
+    cmd: 'ir mount <name> [<directory>]',
     summary: 'Mount an existing repository workspace.',
   },
   {
     category: 'workspace',
-    cmd: 'invariant repo unmount [<directory>]',
+    cmd: 'ir unmount [<directory>]',
     summary: 'Unmount a repository workspace and its nested workspaces.',
   },
 
   // Diagnostics
   {
     category: 'diagnostics',
-    cmd: 'invariant repo blame <file>',
+    cmd: 'ir blame <file>',
     flags: '-commit <hash>',
     summary: 'Show line-by-line commit and author attribution for a file.',
   },
   {
     category: 'diagnostics',
-    cmd: 'invariant repo grep <pattern> [<path>]',
+    cmd: 'ir grep <pattern> [<path>]',
     flags: '-i · -n · -commit <hash>',
     summary: 'Search for patterns across commit trees stored in CAS.',
   },
   {
     category: 'diagnostics',
-    cmd: 'invariant repo bisect <start [<bad> [<good>]]|bad [<commit>]|good [<commit>]|reset|run <cmd> [args...]>',
+    cmd: 'ir bisect <start [<bad> [<good>]]|bad [<commit>]|good [<commit>]|reset|run <cmd> [args...]>',
     summary: 'Perform binary search across commit history to isolate regressions.',
   },
 
   // Git Import / Export
   {
     category: 'git',
-    cmd: 'invariant repo git import [<git-dir>]',
+    cmd: 'ir git import [<git-dir>]',
     flags: '-repository / -repo · -branch · -directory / -d · -depth · -writable · -tag',
     summary: 'Import commit history and file trees from a Git repository into Invariant CAS.',
   },
   {
     category: 'git',
-    cmd: 'invariant repo git export <target-git-dir>',
+    cmd: 'ir git export <target-git-dir>',
     flags: '-branch · -from <commit>',
     summary: 'Export Invariant commits and file trees to a Git repository.',
   },
@@ -379,9 +379,9 @@ const CLI_SUBCOMMANDS = [
       'Manage layered workspaces (.invariant-workspace / .invariant-layer) separating persistent core network files from transient local build directories with ~/.cache/invariant caching and offline overflow.',
   },
   {
-    cmd: 'invariant repository (or invariant repo)',
+    cmd: 'invariant repository',
     summary:
-      'Manage CAS-backed version control repositories, isolated FUSE branch workspaces, 3-way merges, code reviews, dependency layers, and bidirectional Git import/export.',
+      'Manage CAS-backed version control repositories, isolated FUSE branch workspaces, 3-way merges, code reviews, dependency layers, and bidirectional Git import/export. Recommended shell alias: alias ir="invariant repository".',
   },
   {
     cmd: 'invariant print -s <slot_or_content_link>/path/to/file',
@@ -618,10 +618,13 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                         <span className="text-cyan-400">$</span> invariant start services.yaml
                       </div>
                       <div>
-                        <span className="text-cyan-400">$</span> invariant repo create my-repo ./src
+                        <span className="text-cyan-400">$</span> alias ir=&quot;invariant repository&quot;
                       </div>
                       <div>
-                        <span className="text-cyan-400">$</span> invariant repo change feat-branch
+                        <span className="text-cyan-400">$</span> ir create my-repo ./src
+                      </div>
+                      <div>
+                        <span className="text-cyan-400">$</span> ir change feat-branch
                       </div>
                     </div>
                   </div>
@@ -791,12 +794,12 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
         </div>
       </section>
 
-      {/* 3. Dedicated Version Control Repository (invariant repo) Interactive Explorer */}
+      {/* 3. Dedicated Version Control Repository (invariant repository) Interactive Explorer */}
       <section id="repository" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="text-xs font-mono text-emerald-400 mb-2">
-              invariant repository · invariant repo
+              invariant repository · alias ir=&quot;invariant repository&quot;
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               CAS Version Control &amp; Code Review Workflow
@@ -811,6 +814,35 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
             <span>docs/Repository.md</span>
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
+        </div>
+
+        {/* Recommended Shell Alias Callout */}
+        <div className="bg-[#07112B] border border-cyan-400/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="text-xs font-semibold text-white">
+              Recommended Shell Alias
+            </div>
+            <p className="text-xs text-sky-100/80 leading-relaxed">
+              Because <code className="text-cyan-300 font-mono">invariant repository</code> is invoked frequently during development and code review, we recommend adding <code className="text-emerald-300 font-mono">alias ir=&quot;invariant repository&quot;</code> to your shell profile (<code className="text-sky-200 font-mono">~/.bashrc</code> or <code className="text-sky-200 font-mono">~/.zshrc</code>). All command examples below use the <code className="text-cyan-300 font-mono">ir</code> alias.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-[#03091E] border border-[#162B54] rounded-xl px-3.5 py-2 shrink-0 self-start sm:self-center">
+            <code className="text-xs font-mono text-emerald-300 whitespace-nowrap">
+              alias ir=&quot;invariant repository&quot;
+            </code>
+            <button
+              type="button"
+              onClick={() => handleCopy('alias ir="invariant repository"', 'alias-ir')}
+              className="text-sky-300/60 hover:text-cyan-300 p-1 transition-colors"
+              title="Copy alias command"
+            >
+              {copiedId === 'alias-ir' ? (
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Category Filter Tabs */}

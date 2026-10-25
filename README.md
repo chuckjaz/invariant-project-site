@@ -1,14 +1,10 @@
-# Invariant Project · Static Home Page & CLI Identity Portal
+# Invariant Project · Static Home Page
 
-A static-first site and OAuth2 identity verification interface for `invariantproject.com`, presenting the architecture and `invariant` CLI documentation at `/` and providing OAuth2 identity verification for the `invariant` CLI at `/auth`.
+A static site for `invariantproject.com`, presenting the architecture and `invariant` CLI documentation for `invariant-go`.
 
 ## Overview
 
-- **Informational Home Page (`/`)**: Documents the Invariant distributed content-addressed storage architecture, layered FUSE/NFS file systems, immutable B-Tree key-value store, `invariant repository` / `invariant repo` CAS version control and code review workflows, and `inv-*` microservices.
-- **OAuth2 Identity Verification & Invitation Binding (`/auth`)**: Confirms user identity (OpenID Connect / UserInfo email verification) via OAuth2 identity providers (Google and GitHub). When redeeming a single-use user invitation (`inv_invite_<hex>@itp://tc1...`) via `invariant invite redeem`, `invariant` validates the user's OAuth2 credentials, verifies that the authenticated OAuth2 email matches the email bound to the invitation, and exchanges the invitation and WireGuard node public key with the control plane (`inv-discovery`) for a WireGuard-pinned access token (`inv_at_...`).
-- **RFC 8252 Native App Support**:
-  - **Automated Localhost Loopback**: Returns authorization credentials to the local terminal listener (e.g. `http://127.0.0.1:8085/callback`).
-  - **Manual / Headless Mode**: Displays a copyable token and `invariant login` / `invariant invite redeem` command for remote SSH, Docker container, or headless terminal sessions.
+- **Informational Home Page (`/`)**: Documents the Invariant distributed content-addressed storage architecture, layered FUSE/NFS file systems, immutable B-Tree key-value store, `invariant repository` CAS version control and code review workflows, and `inv-*` microservices.
 - **100% Static Deployment**: Requires zero backend server runtime. The compiled bundle consists exclusively of static HTML, CSS, and JavaScript files hostable on any static CDN or file hosting platform.
 
 ---
@@ -80,7 +76,7 @@ jobs:
 ```
 
 3. **Configure Custom Domain (`invariantproject.com`)**:
-   - If using a custom domain (such as `invariantproject.com` or `auth.invariantproject.com`):
+   - If using a custom domain (such as `invariantproject.com`):
      - In **Settings** > **Pages** > **Custom domain**, enter your domain name.
      - Add a `CNAME` file in the `public/` directory (or add it directly to `dist/` before deployment) containing:
        ```
@@ -94,7 +90,6 @@ jobs:
          185.199.110.153
          185.199.111.153
          ```
-       - For a subdomain (`auth.invariantproject.com`): Add a `CNAME` record pointing to `<your-github-username>.github.io`.
      - Check **Enforce HTTPS** in repository settings once DNS propagates.
 
 ---
@@ -149,45 +144,3 @@ invariant provision --install services.yaml
 # Start all configured services
 invariant start services.yaml
 ```
-
----
-
-## CLI Integration Protocol
-
-The `invariant login` command initiates the OAuth2 flow by launching the user's browser to the `/auth` subpage with standard OAuth 2.0 / OIDC parameters:
-
-```bash
-https://invariantproject.com/auth?client_id=invariant-cli&redirect_uri=http://127.0.0.1:8085/callback&state=<RANDOM_STATE>&nonce=<RANDOM_NONCE>&response_type=code
-```
-
-When redeeming a single-use control-plane invitation created with `invariant invite create --role user --name <name> --email <email>`, the user runs:
-
-```bash
-invariant invite redeem "inv_invite_<hex>@itp://tc1<discovery-nodekey>:3003"
-```
-
-`invariant invite redeem` validates the user's OAuth2 credentials against the OAuth2 UserInfo endpoint, verifies that the authenticated email matches the invitation email, and redeems the invitation against the embedded control plane (`itp://tc1...`) to store a WireGuard-pinned access token in `~/.invariant/keys/client.token` and control plane address in `~/.invariant/keys/client.discovery`.
-
-### Parameter Reference
-
-| Parameter | Required | Description |
-| :--- | :--- | :--- |
-| `client_id` | Yes | Identifier for the client (default: `invariant-cli`). |
-| `redirect_uri` | Optional | Loopback address (e.g. `http://127.0.0.1:8085/callback`). If omitted, headless manual copy mode is engaged. |
-| `state` | Recommended | Anti-CSRF token verified by the CLI upon receiving callback. |
-| `nonce` | Optional | Replay-protection token embedded into the identity assertion payload. |
-| `invite` | Optional | Single-use invitation code with embedded control-plane URL (`inv_invite_<hex>@itp://...`). |
-| `email` | Optional | Expected OAuth2 email bound to the user invitation. |
-| `response_type` | Yes | Defaults to `code`. |
-
-### Callback Execution
-
-- **Loopback Mode**: When `redirect_uri` points to `localhost` or `127.0.0.1`, the page notifies the local listener:
-  ```
-  GET http://127.0.0.1:8085/callback?code=inv_id_...&state=...
-  ```
-- **Headless Mode**: When running in remote SSH or containerized terminals, the page provides the verification token and the terminal command:
-  ```bash
-  invariant login --token inv_id_...
-  invariant invite redeem "inv_invite_<hex>@itp://..." --token inv_id_...
-  ```

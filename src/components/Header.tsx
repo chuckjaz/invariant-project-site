@@ -71,45 +71,25 @@ export const Header: React.FC<HeaderProps> = ({
               Overview
             </a>
             <a
-              href="/#architecture"
-              onClick={() => {
-                if (window.location.pathname.startsWith('/auth')) {
-                  onNavigateHome();
-                }
-              }}
+              href="/#capabilities"
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
             >
               Architecture
             </a>
             <a
               href="/#repository"
-              onClick={() => {
-                if (window.location.pathname.startsWith('/auth')) {
-                  onNavigateHome();
-                }
-              }}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
             >
               Repositories
             </a>
             <a
-              href="/#services"
-              onClick={() => {
-                if (window.location.pathname.startsWith('/auth')) {
-                  onNavigateHome();
-                }
-              }}
+              href="/#microservices"
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
             >
               Microservices
             </a>
             <a
               href="/#cli"
-              onClick={() => {
-                if (window.location.pathname.startsWith('/auth')) {
-                  onNavigateHome();
-                }
-              }}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
             >
               CLI &amp; Config

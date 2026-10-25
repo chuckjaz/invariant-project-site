@@ -15,14 +15,6 @@ export default defineConfig(({mode}) => {
         '@': path.resolve('.'),
       },
     },
-    build: {
-      rollupOptions: {
-        input: {
-          main: path.resolve('index.html'),
-          auth: path.resolve('auth/index.html'),
-        },
-      },
-    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
