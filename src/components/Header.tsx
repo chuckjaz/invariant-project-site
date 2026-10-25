@@ -61,20 +61,10 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-1 pl-4 border-l border-[#162B54]">
             <a
-              href="/#overview"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigateHome();
-              }}
+              href="/#quickstart"
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
             >
-              Overview
-            </a>
-            <a
-              href="/#capabilities"
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
-            >
-              Architecture
+              Quick Start
             </a>
             <a
               href="/#repository"
@@ -83,16 +73,22 @@ export const Header: React.FC<HeaderProps> = ({
               Repositories
             </a>
             <a
-              href="/#microservices"
+              href="/#capabilities"
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
             >
-              Microservices
+              Architecture
             </a>
             <a
               href="/#cli"
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
             >
-              CLI &amp; Config
+              CLI &amp; Hosting
+            </a>
+            <a
+              href="/#microservices"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-[#07112B]/80 transition-colors"
+            >
+              Microservices
             </a>
           </nav>
         </div>

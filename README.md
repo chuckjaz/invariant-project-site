@@ -1,11 +1,44 @@
 # Invariant Project · Static Home Page
 
-A static site for `invariantproject.com`, presenting the architecture and `invariant` CLI documentation for `invariant-go`.
+A static site for `invariantproject.com`, presenting client onboarding, `invariant repository` (`ir`) version control workflows, and architecture documentation for `invariant-go`.
 
 ## Overview
 
-- **Informational Home Page (`/`)**: Documents the Invariant distributed content-addressed storage architecture, layered FUSE/NFS file systems, immutable B-Tree key-value store, `invariant repository` CAS version control and code review workflows, and `inv-*` microservices.
+- **Connecting to an Existing Service**: Guides users through receiving an invitation token (`inv_invite_<hex>@itp://...`), installing the `invariant` CLI, and redeeming the token (`invariant invite redeem`) to connect to an existing Invariant cluster without hosting infrastructure.
+- **Version Control & Layered Workspaces**: Documents `invariant repository` (recommended alias `alias ir="invariant repository"`) CAS version control and code review workflows, layered FUSE/NFS file systems, immutable B-Tree key-value store, and `inv-*` microservices.
 - **100% Static Deployment**: Requires zero backend server runtime. The compiled bundle consists exclusively of static HTML, CSS, and JavaScript files hostable on any static CDN or file hosting platform.
+
+---
+
+## Connecting to an Existing Invariant Service
+
+1. **Receive an Invitation Token**:
+   Obtain a single-use invitation string (`inv_invite_<hex>@itp://tc1<nodekey>:3003`) from your Invariant service administrator.
+
+2. **Install `invariant` and Configure the `ir` Alias**:
+   ```bash
+   # Install the CLI and local FUSE backing service
+   go install github.com/chuckjaz/invariant-go/cmd/invariant@latest
+   go install github.com/chuckjaz/invariant-go/cmd/inv-files@latest
+
+   # Recommended shell alias (add to ~/.bashrc or ~/.zshrc)
+   alias ir="invariant repository"
+   ```
+
+3. **Authenticate and Redeem Your Token**:
+   ```bash
+   # Authenticate with your OAuth2 provider
+   invariant login
+
+   # Redeem your invitation token to pin your WireGuard node key and save credentials
+   invariant invite redeem "inv_invite_<hex>@itp://tc1<nodekey>:3003"
+   ```
+
+4. **Open a Repository and Start Working**:
+   ```bash
+   ir open my-repo
+   ir change feat-branch
+   ```
 
 ---
 
@@ -126,21 +159,4 @@ npm run build
 
 # Preview static production build locally
 npm run preview
-```
-
----
-
-## CLI & Service Installation
-
-Install the `invariant` CLI and the `inv-*` microservices (`inv-discovery`, `inv-names`, `inv-slots`, `inv-storage`, `inv-finder`, `inv-distribute`, `inv-kv`, `inv-files`) using `go install`:
-
-```bash
-# Install the CLI and all microservices at once
-go install github.com/chuckjaz/invariant-go/cmd/...@latest
-
-# Provision control-plane and service tokens (auto-installing any missing inv-* commands)
-invariant provision --install services.yaml
-
-# Start all configured services
-invariant start services.yaml
 ```

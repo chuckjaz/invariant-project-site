@@ -9,6 +9,10 @@ import {
   Check,
   ExternalLink,
   GitBranch,
+  KeyRound,
+  Download,
+  ShieldCheck,
+  Terminal,
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -202,15 +206,15 @@ const REPO_COMMANDS: RepoCommandSpec[] = [
   // Initialization and configuration
   {
     category: 'init',
-    cmd: 'ir create <name> [<content>]',
-    flags: '-content · -d · -tag · -create-only · -encrypt · -compress · -writable · -readonly',
-    summary: 'Create a new repository, register it with the Names Service, and initialize the main branch.',
-  },
-  {
-    category: 'init',
     cmd: 'ir open <name> [<directory>]',
     flags: '-b / -branch · -d / -directory · -layers · -create-only · -foreground · -writable · -tag',
     summary: 'Open an existing repository from the Names Service into a layered FUSE workspace.',
+  },
+  {
+    category: 'init',
+    cmd: 'ir create <name> [<content>]',
+    flags: '-content · -d · -tag · -create-only · -encrypt · -compress · -writable · -readonly',
+    summary: 'Create a new repository, register it with the Names Service, and initialize the main branch.',
   },
   {
     category: 'init',
@@ -324,59 +328,13 @@ const REPO_COMMANDS: RepoCommandSpec[] = [
 
 const CLI_SUBCOMMANDS = [
   {
-    cmd: 'invariant provision --install services.yaml',
-    summary:
-      'Bootstrap the control plane and provision service tokens (service.token) and discovery addresses (discovery.url). With --install, installs missing inv-* commands via go install.',
-  },
-  {
-    cmd: 'invariant start services.yaml',
-    summary: 'Start and orchestrate local microservice clusters defined in a YAML configuration file.',
-  },
-  {
     cmd: 'invariant login',
     summary: 'Authenticate with the OAuth2 provider to obtain user credentials (~/.invariant/oauth_token.json).',
   },
   {
-    cmd: 'invariant invite create | redeem | list | revoke',
+    cmd: 'invariant invite redeem <inv_invite_...@itp://...>',
     summary:
-      'Create, redeem, list, or revoke control-plane invitation codes (create --role <user|service|admin>, redeem <inv_invite_...@itp://...>, list, revoke <id>).',
-  },
-  {
-    cmd: 'invariant token list | revoke <id>',
-    summary: 'List or revoke active control-plane access tokens.',
-  },
-  {
-    cmd: 'invariant slot --protected',
-    summary:
-      'Allocate a mutable slot from the slots service. With --protected, generates a 256-bit Ed25519 key pair using the 32-byte public key as the slot ID and stores the private key in ~/.invariant/keys/.',
-  },
-  {
-    cmd: 'invariant name <logical_name> <id>',
-    summary: 'Register a human-readable logical name to a 64-character slot or device ID.',
-  },
-  {
-    cmd: 'invariant lookup <logical_name>',
-    summary: 'Resolve a registered logical name to its corresponding 64-character ID or network address.',
-  },
-  {
-    cmd: 'invariant upload <dir> --slot <name> --compress --encrypt',
-    summary:
-      'Upload a local directory as a content-addressed file tree preserving ctime/mtime and splitting zip archives. Supports --key-policy (Deterministic, RandomPerBlock, RandomAllKey, SuppliedAllKey), --prev, --dry-run, and --stats.',
-  },
-  {
-    cmd: 'invariant mount <dir> --compress --encrypt',
-    summary:
-      'Mount the Invariant file system locally via FUSE with dynamic .invariant-layer reloading, name resolution, read/write disk caching, and dirty directory merging.',
-  },
-  {
-    cmd: 'invariant nfs --listen :2049 --compress --encrypt',
-    summary:
-      'Export the Invariant file system as a completely native NFS server without kernel FUSE dependencies.',
-  },
-  {
-    cmd: 'invariant workspace create | mount | unmount | pull',
-    summary:
-      'Manage layered workspaces (.invariant-workspace / .invariant-layer) separating persistent core network files from transient local build directories with ~/.cache/invariant caching and offline overflow.',
+      'Redeem a single-use control-plane invitation token, verifying your OAuth2 email and pinning your local WireGuard node key (~/.invariant/keys/client.token & client.discovery).',
   },
   {
     cmd: 'invariant repository',
@@ -384,25 +342,78 @@ const CLI_SUBCOMMANDS = [
       'Manage CAS-backed version control repositories, isolated FUSE branch workspaces, 3-way merges, code reviews, dependency layers, and bidirectional Git import/export. Recommended shell alias: alias ir="invariant repository".',
   },
   {
+    cmd: 'invariant mount <dir> --compress --encrypt',
+    summary:
+      'Mount the Invariant file system locally via FUSE with dynamic .invariant-layer reloading, name resolution, read/write disk caching, and dirty directory merging.',
+  },
+  {
+    cmd: 'invariant workspace create | mount | unmount | pull',
+    summary:
+      'Manage layered workspaces (.invariant-workspace / .invariant-layer) separating persistent core network files from transient local build directories with ~/.cache/invariant caching and offline overflow.',
+  },
+  {
+    cmd: 'invariant upload <dir> --slot <name> --compress --encrypt',
+    summary:
+      'Upload a local directory as a content-addressed file tree preserving ctime/mtime and splitting zip archives. Supports --key-policy (Deterministic, RandomPerBlock, RandomAllKey, SuppliedAllKey), --prev, --dry-run, and --stats.',
+  },
+  {
+    cmd: 'invariant lookup <logical_name>',
+    summary: 'Resolve a registered logical name to its corresponding 64-character ID or network address.',
+  },
+  {
+    cmd: 'invariant name <logical_name> <id>',
+    summary: 'Register a human-readable logical name to a 64-character slot or device ID.',
+  },
+  {
+    cmd: 'invariant slot --protected',
+    summary:
+      'Allocate a mutable slot from the slots service. With --protected, generates a 256-bit Ed25519 key pair using the 32-byte public key as the slot ID and stores the private key in ~/.invariant/keys/.',
+  },
+  {
     cmd: 'invariant print -s <slot_or_content_link>/path/to/file',
     summary:
       'Stream a block or subpath traversal directly to standard output from a ContentLink JSON or mutable slot.',
   },
+  {
+    cmd: 'invariant nfs --listen :2049 --compress --encrypt',
+    summary:
+      'Export the Invariant file system as a completely native NFS server without kernel FUSE dependencies.',
+  },
+  {
+    cmd: 'invariant invite create | list | revoke',
+    summary:
+      'Administer control-plane invitation tokens (create --role <user|service|admin> --name <name> --email <email>, list, revoke <id>).',
+  },
+  {
+    cmd: 'invariant token list | revoke <id>',
+    summary: 'List or revoke active control-plane access tokens.',
+  },
+  {
+    cmd: 'invariant provision --install services.yaml',
+    summary:
+      'Bootstrap a self-hosted control plane and provision service tokens (service.token) and discovery addresses (discovery.url). With --install, installs missing inv-* commands via go install.',
+  },
+  {
+    cmd: 'invariant start services.yaml',
+    summary: 'Start and orchestrate self-hosted microservice clusters defined in a YAML configuration file.',
+  },
 ];
 
-const GO_INSTALL_SNIPPET = `# Install the CLI and all microservices at once
-go install github.com/chuckjaz/invariant-go/cmd/...@latest
+const CLIENT_INSTALL_SNIPPET = `go install github.com/chuckjaz/invariant-go/cmd/invariant@latest
+go install github.com/chuckjaz/invariant-go/cmd/inv-files@latest
+alias ir="invariant repository"`;
 
-# Or install individual commands
+const CLIENT_REDEEM_SNIPPET = `invariant login
+invariant invite redeem "inv_invite_<hex>@itp://tc1<nodekey>:3003"`;
+
+const GO_INSTALL_SNIPPET = `# Client installation (connect to an existing service & mount FUSE workspaces)
 go install github.com/chuckjaz/invariant-go/cmd/invariant@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-discovery@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-names@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-slots@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-storage@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-finder@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-distribute@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-kv@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-files@latest`;
+
+# Recommended shell alias for version control (add to ~/.bashrc or ~/.zshrc)
+alias ir="invariant repository"
+
+# Full cluster installation (only needed if self-hosting all microservices)
+go install github.com/chuckjaz/invariant-go/cmd/...@latest`;
 
 const SERVICES_EXEC_SNIPPET = `# Discovery Service (default port 3003)
 go run ./cmd/inv-discovery -port 3003
@@ -523,34 +534,36 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
             {/* Left Column: Core Proposition */}
             <div className="lg:col-span-7 space-y-6">
               <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-cyan-300">
-                <span>Content-Addressed Storage</span>
-                <span aria-hidden="true" className="text-[#162B54]">·</span>
-                <span>FUSE &amp; Native NFS</span>
+                <span>Connect with an Invitation Token</span>
                 <span aria-hidden="true" className="text-[#162B54]">·</span>
                 <span>CAS Version Control &amp; Code Review</span>
+                <span aria-hidden="true" className="text-[#162B54]">·</span>
+                <span>FUSE &amp; Native NFS</span>
               </div>
 
               <h1
                 className="text-3xl sm:text-5xl font-bold tracking-tight text-white leading-[1.12]"
                 style={{ textWrap: 'balance' }}
               >
-                Content-Addressing Storage, Layered File System &amp; Version Control
+                Connect to Shared CAS Repositories &amp; Layered File Systems
               </h1>
 
               <p className="text-base text-sky-100/80 leading-relaxed max-w-2xl">
-                The Invariant Project is a distributed, content-addressing storage architecture for arbitrary data. Upload directories, mount live layered file systems via FUSE or native NFS, and manage distributed version control repositories and code reviews stored directly in CAS without a local <code className="text-cyan-300 font-mono">.git</code> directory.
+                Using an existing Invariant service requires zero server setup. Receive an invitation token from your administrator, install the <code className="text-cyan-300 font-mono">invariant</code> CLI, and redeem your token to immediately mount layered FUSE workspaces, collaborate on CAS-backed repositories, and run code reviews without a local <code className="text-cyan-300 font-mono">.git</code> directory.
               </p>
 
               {/* Primary & Secondary Actions */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <a
-                  href="https://github.com/chuckjaz/invariant-go"
-                  target="_blank"
-                  rel="noreferrer"
+                  href="#quickstart"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('quickstart')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] text-sm font-bold shadow-lg shadow-cyan-500/15 hover:opacity-95 transition-opacity whitespace-nowrap shrink-0"
                 >
-                  <span>View invariant-go on GitHub</span>
-                  <ExternalLink className="h-4 w-4" />
+                  <KeyRound className="h-4 w-4" />
+                  <span>Redeem a Token &amp; Get Started</span>
                 </a>
 
                 <a
@@ -569,21 +582,21 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
               {/* Technical Highlights Strip */}
               <div className="pt-4 border-t border-[#162B54]/80 grid grid-cols-3 gap-6 text-xs">
                 <div>
-                  <div className="font-mono font-semibold text-cyan-300 tabular-nums">8 Microservices</div>
-                  <div className="text-sky-200/60 mt-0.5">Independently replaceable</div>
+                  <div className="font-mono font-semibold text-cyan-300 tabular-nums">1. Receive Token</div>
+                  <div className="text-sky-200/60 mt-0.5">inv_invite_...@itp://...</div>
                 </div>
                 <div>
-                  <div className="font-mono font-semibold text-emerald-300 tabular-nums">CAS Repositories</div>
-                  <div className="text-sky-200/60 mt-0.5">Branching, reviews &amp; Git sync</div>
+                  <div className="font-mono font-semibold text-emerald-300 tabular-nums">2. Install CLI</div>
+                  <div className="text-sky-200/60 mt-0.5">invariant &amp; inv-files</div>
                 </div>
                 <div>
-                  <div className="font-mono font-semibold text-sky-300 tabular-nums">FUSE &amp; NFS :2049</div>
-                  <div className="text-sky-200/60 mt-0.5">Multi-host live sync</div>
+                  <div className="font-mono font-semibold text-sky-300 tabular-nums">3. Redeem &amp; Work</div>
+                  <div className="text-sky-200/60 mt-0.5">WireGuard-pinned access</div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Brand Emblem & Quick Architecture Card */}
+            {/* Right Column: Brand Emblem & Client Quick Start Card */}
             <div className="lg:col-span-5">
               <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400" />
@@ -596,7 +609,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                         alt="Invariant Project Logo"
                         referrerPolicy="no-referrer"
                         onError={() => setLogoError(true)}
-                        className="h-48 w-48 sm:h-56 sm:w-56 rounded-xl object-contain mx-auto"
+                        className="h-44 w-44 sm:h-52 sm:w-52 rounded-xl object-contain mx-auto"
                       />
                     </div>
                   ) : (
@@ -607,21 +620,30 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
 
                   <div className="w-full rounded-xl bg-[#03091E] border border-[#162B54] p-4 text-left font-mono text-xs space-y-2">
                     <div className="flex items-center justify-between text-[11px] text-sky-300/60 border-b border-[#162B54] pb-2">
-                      <span>Quick Start · Cluster &amp; Repo</span>
-                      <span className="text-emerald-400">~/.invariant/config.yaml</span>
+                      <span>Client Quick Start · Connect to Service</span>
+                      <span className="text-emerald-400">~/.invariant/</span>
                     </div>
-                    <div className="text-sky-100 space-y-1 text-[11px]">
+                    <div className="text-sky-100 space-y-1 text-[11px] overflow-x-auto">
+                      <div className="text-sky-300/50"># 1. Install CLI &amp; set alias</div>
                       <div>
-                        <span className="text-cyan-400">$</span> invariant provision --install services.yaml
+                        <span className="text-cyan-400">$</span> go install github.com/chuckjaz/invariant-go/cmd/invariant@latest
                       </div>
                       <div>
-                        <span className="text-cyan-400">$</span> invariant start services.yaml
+                        <span className="text-cyan-400">$</span> go install github.com/chuckjaz/invariant-go/cmd/inv-files@latest
                       </div>
                       <div>
                         <span className="text-cyan-400">$</span> alias ir=&quot;invariant repository&quot;
                       </div>
+                      <div className="text-sky-300/50 pt-1"># 2. Authenticate &amp; redeem invitation token</div>
                       <div>
-                        <span className="text-cyan-400">$</span> ir create my-repo ./src
+                        <span className="text-cyan-400">$</span> invariant login
+                      </div>
+                      <div>
+                        <span className="text-cyan-400">$</span> invariant invite redeem &quot;inv_invite_...@itp://...&quot;
+                      </div>
+                      <div className="text-sky-300/50 pt-1"># 3. Open a repository &amp; create a change branch</div>
+                      <div>
+                        <span className="text-cyan-400">$</span> ir open my-repo
                       </div>
                       <div>
                         <span className="text-cyan-400">$</span> ir change feat-branch
@@ -635,7 +657,265 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
         </div>
       </section>
 
-      {/* 2. Core System Capabilities (Asymmetric Bento Grid) */}
+      {/* 2. Client Onboarding Section: Connecting to an Existing Service */}
+      <section id="quickstart" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="text-xs font-mono text-cyan-400 mb-2">
+              Client Onboarding · Zero Server Setup Required
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Connect to an Existing Service in Three Steps
+            </h2>
+          </div>
+          <p className="text-xs text-sky-200/70 max-w-md">
+            You do not need to host or configure storage nodes to use Invariant. Your invitation token contains everything needed to discover and authenticate with the cluster.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Step 1: Receive Token */}
+          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 flex flex-col justify-between space-y-5 relative overflow-hidden">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-semibold text-cyan-300 px-2.5 py-1 rounded-md bg-cyan-500/10 border border-cyan-400/30">
+                  Step 01
+                </span>
+                <KeyRound className="h-5 w-5 text-cyan-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                Receive an Invitation Token
+              </h3>
+              <p className="text-xs text-sky-100/80 leading-relaxed">
+                Ask your Invariant cluster administrator for a single-use invitation token bound to your email address. The token embeds both the secret invitation code and the control-plane discovery address.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#03091E] border border-[#162B54] space-y-2">
+              <div className="text-[11px] font-mono text-sky-300/60">
+                Invitation Token Format
+              </div>
+              <div className="font-mono text-[11px] text-emerald-300 break-all">
+                inv_invite_&lt;hex&gt;@itp://tc1&lt;nodekey&gt;:3003
+              </div>
+              <div className="pt-2 border-t border-[#162B54]/70 text-[11px] text-sky-200/60">
+                 embeds the single-use code + WireGuard <code className="text-cyan-300 font-mono">itp://</code> discovery endpoint
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2: Install Invariant */}
+          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 flex flex-col justify-between space-y-5 relative overflow-hidden">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-semibold text-emerald-300 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-400/30">
+                  Step 02
+                </span>
+                <Download className="h-5 w-5 text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                Install <code className="text-cyan-300 font-mono">invariant</code> &amp; Set Alias
+              </h3>
+              <p className="text-xs text-sky-100/80 leading-relaxed">
+                Install the <code className="text-cyan-300 font-mono">invariant</code> CLI and the local <code className="text-cyan-300 font-mono">inv-files</code> FUSE backing service via Go, then add the <code className="text-emerald-300 font-mono">ir</code> alias to your shell profile (<code className="text-sky-200 font-mono">~/.bashrc</code> or <code className="text-sky-200 font-mono">~/.zshrc</code>).
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#03091E] border border-[#162B54] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-sky-300/60">Terminal</span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(CLIENT_INSTALL_SNIPPET, 'step-install')}
+                  className="flex items-center gap-1 text-[11px] text-cyan-300 hover:text-emerald-300 transition-colors"
+                >
+                  {copiedId === 'step-install' ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  <span>{copiedId === 'step-install' ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+              <pre className="font-mono text-[11px] text-sky-100 overflow-x-auto leading-relaxed">
+                {CLIENT_INSTALL_SNIPPET}
+              </pre>
+            </div>
+          </div>
+
+          {/* Step 3: Redeem Token */}
+          <div className="bg-[#07112B] border border-cyan-400/35 rounded-2xl p-6 flex flex-col justify-between space-y-5 relative overflow-hidden">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-semibold text-sky-300 px-2.5 py-1 rounded-md bg-sky-500/15 border border-sky-400/30">
+                  Step 03
+                </span>
+                <ShieldCheck className="h-5 w-5 text-cyan-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white">
+                Redeem the Token
+              </h3>
+              <p className="text-xs text-sky-100/80 leading-relaxed">
+                Run <code className="text-cyan-300 font-mono">invariant login</code> to verify your OAuth2 email, then run <code className="text-cyan-300 font-mono">invariant invite redeem</code>. Invariant pins your local WireGuard public key with the control plane and stores your credentials.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#03091E] border border-[#162B54] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-sky-300/60">Terminal</span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(CLIENT_REDEEM_SNIPPET, 'step-redeem')}
+                  className="flex items-center gap-1 text-[11px] text-cyan-300 hover:text-emerald-300 transition-colors"
+                >
+                  {copiedId === 'step-redeem' ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  <span>{copiedId === 'step-redeem' ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+              <pre className="font-mono text-[11px] text-emerald-300 overflow-x-auto leading-relaxed">
+                {CLIENT_REDEEM_SNIPPET}
+              </pre>
+            </div>
+          </div>
+        </div>
+
+        {/* What Redemption Configures Callout */}
+        <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs">
+          <div className="flex items-start gap-3">
+            <Terminal className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
+            <div className="text-sky-100/80 leading-relaxed">
+              <strong className="text-white">Automatic Client Configuration:</strong> Redeeming your token writes your WireGuard-pinned access token to <code className="text-cyan-300 font-mono">~/.invariant/keys/client.token</code> and the control-plane discovery address to <code className="text-cyan-300 font-mono">~/.invariant/keys/client.discovery</code>. All subsequent <code className="text-emerald-300 font-mono">ir</code> and <code className="text-emerald-300 font-mono">invariant</code> commands automatically discover storage, slots, and names services through this connection.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Dedicated Version Control Repository (invariant repository) Interactive Explorer */}
+      <section id="repository" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="text-xs font-mono text-emerald-400 mb-2">
+              invariant repository · alias ir=&quot;invariant repository&quot;
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Working with Repositories &amp; Code Reviews
+            </h2>
+          </div>
+          <a
+            href="https://github.com/chuckjaz/invariant-go/blob/main/docs/Repository.md"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-300 hover:text-emerald-300 transition-colors shrink-0"
+          >
+            <span>docs/Repository.md</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+
+        {/* Recommended Shell Alias Callout */}
+        <div className="bg-[#07112B] border border-cyan-400/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="text-xs font-semibold text-white">
+              Recommended Shell Alias
+            </div>
+            <p className="text-xs text-sky-100/80 leading-relaxed">
+              Because <code className="text-cyan-300 font-mono">invariant repository</code> is invoked frequently during development and code review, we recommend adding <code className="text-emerald-300 font-mono">alias ir=&quot;invariant repository&quot;</code> to your shell profile (<code className="text-sky-200 font-mono">~/.bashrc</code> or <code className="text-sky-200 font-mono">~/.zshrc</code>). All command examples below use the <code className="text-cyan-300 font-mono">ir</code> alias.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-[#03091E] border border-[#162B54] rounded-xl px-3.5 py-2 shrink-0 self-start sm:self-center">
+            <code className="text-xs font-mono text-emerald-300 whitespace-nowrap">
+              alias ir=&quot;invariant repository&quot;
+            </code>
+            <button
+              type="button"
+              onClick={() => handleCopy('alias ir="invariant repository"', 'alias-ir')}
+              className="text-sky-300/60 hover:text-cyan-300 p-1 transition-colors"
+              title="Copy alias command"
+            >
+              {copiedId === 'alias-ir' ? (
+                <Check className="h-3.5 w-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Category Filter Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#07112B] border border-[#162B54] rounded-xl">
+          {(
+            [
+              { id: 'workflow', label: 'Primary Workflow' },
+              { id: 'review', label: 'Code Reviews' },
+              { id: 'init', label: 'Open & Config' },
+              { id: 'branch', label: 'Branch Management' },
+              { id: 'workspace', label: 'Workspace & Layers' },
+              { id: 'diagnostics', label: 'Diagnostics (blame/grep/bisect)' },
+              { id: 'git', label: 'Git Import / Export' },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveRepoCategory(tab.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
+                activeRepoCategory === tab.id
+                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
+                  : 'text-sky-200/70 hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Filtered Repository Commands Grid */}
+        <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {filteredRepoCommands.map((item) => (
+              <div
+                key={item.cmd}
+                className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] flex flex-col justify-between gap-2.5"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <code className="text-xs font-mono font-semibold text-cyan-300 break-all">
+                      {item.cmd}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(item.cmd, item.cmd)}
+                      className="text-sky-300/60 hover:text-cyan-300 p-1 shrink-0 transition-colors"
+                      title="Copy command"
+                    >
+                      {copiedId === item.cmd ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-sky-100/80 leading-relaxed">
+                    {item.summary}
+                  </p>
+                </div>
+
+                {item.flags && (
+                  <div className="pt-2 border-t border-[#162B54]/70 text-[11px] font-mono text-emerald-300/90">
+                    Flags: {item.flags}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Core System Capabilities (Asymmetric Bento Grid) */}
       <section id="capabilities" className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-8">
           <div className="text-xs font-mono text-cyan-400 mb-2">Core Architecture</div>
@@ -794,95 +1074,97 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
         </div>
       </section>
 
-      {/* 3. Dedicated Version Control Repository (invariant repository) Interactive Explorer */}
-      <section id="repository" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
+      {/* 5. Interactive CLI Utility & Optional Self-Hosting Reference */}
+      <section id="cli" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="text-xs font-mono text-emerald-400 mb-2">
-              invariant repository · alias ir=&quot;invariant repository&quot;
-            </div>
+            <div className="text-xs font-mono text-cyan-400 mb-2">CLI Reference &amp; Optional Self-Hosting</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              CAS Version Control &amp; Code Review Workflow
+              Invariant CLI &amp; Cluster Configuration
             </h2>
           </div>
-          <a
-            href="https://github.com/chuckjaz/invariant-go/blob/main/docs/Repository.md"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-300 hover:text-emerald-300 transition-colors shrink-0"
-          >
-            <span>docs/Repository.md</span>
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        </div>
 
-        {/* Recommended Shell Alias Callout */}
-        <div className="bg-[#07112B] border border-cyan-400/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="text-xs font-semibold text-white">
-              Recommended Shell Alias
-            </div>
-            <p className="text-xs text-sky-100/80 leading-relaxed">
-              Because <code className="text-cyan-300 font-mono">invariant repository</code> is invoked frequently during development and code review, we recommend adding <code className="text-emerald-300 font-mono">alias ir=&quot;invariant repository&quot;</code> to your shell profile (<code className="text-sky-200 font-mono">~/.bashrc</code> or <code className="text-sky-200 font-mono">~/.zshrc</code>). All command examples below use the <code className="text-cyan-300 font-mono">ir</code> alias.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 bg-[#03091E] border border-[#162B54] rounded-xl px-3.5 py-2 shrink-0 self-start sm:self-center">
-            <code className="text-xs font-mono text-emerald-300 whitespace-nowrap">
-              alias ir=&quot;invariant repository&quot;
-            </code>
+          {/* Interactive Filter / Tab Controls */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#07112B] border border-[#162B54] rounded-xl">
             <button
               type="button"
-              onClick={() => handleCopy('alias ir="invariant repository"', 'alias-ir')}
-              className="text-sky-300/60 hover:text-cyan-300 p-1 transition-colors"
-              title="Copy alias command"
-            >
-              {copiedId === 'alias-ir' ? (
-                <Check className="h-3.5 w-3.5 text-emerald-400" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Category Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#07112B] border border-[#162B54] rounded-xl">
-          {(
-            [
-              { id: 'workflow', label: 'Primary Workflow' },
-              { id: 'review', label: 'Code Reviews' },
-              { id: 'init', label: 'Init & Config' },
-              { id: 'branch', label: 'Branch Management' },
-              { id: 'workspace', label: 'Workspace & Layers' },
-              { id: 'diagnostics', label: 'Diagnostics (blame/grep/bisect)' },
-              { id: 'git', label: 'Git Import / Export' },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveRepoCategory(tab.id)}
+              onClick={() => setActiveCodeTab('cli')}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
-                activeRepoCategory === tab.id
+                activeCodeTab === 'cli'
                   ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
                   : 'text-sky-200/70 hover:text-white'
               }`}
             >
-              {tab.label}
+              invariant CLI
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => setActiveCodeTab('install')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
+                activeCodeTab === 'install'
+                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
+                  : 'text-sky-200/70 hover:text-white'
+              }`}
+            >
+              go install
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveCodeTab('yaml')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
+                activeCodeTab === 'yaml'
+                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
+                  : 'text-sky-200/70 hover:text-white'
+              }`}
+            >
+              Self-Host: services.yaml
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveCodeTab('docker')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
+                activeCodeTab === 'docker'
+                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
+                  : 'text-sky-200/70 hover:text-white'
+              }`}
+            >
+              Self-Host: Docker
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveCodeTab('exec')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
+                activeCodeTab === 'exec'
+                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
+                  : 'text-sky-200/70 hover:text-white'
+              }`}
+            >
+              Self-Host: Binaries
+            </button>
+          </div>
         </div>
 
-        {/* Filtered Repository Commands Grid */}
-        <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {filteredRepoCommands.map((item) => (
-              <div
-                key={item.cmd}
-                className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] flex flex-col justify-between gap-2.5"
-              >
-                <div className="space-y-1.5">
-                  <div className="flex items-start justify-between gap-2">
+        {/* Tab 1: CLI Subcommands */}
+        {activeCodeTab === 'cli' && (
+          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#162B54]">
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                  The <code className="text-cyan-300 font-mono">invariant</code> CLI Utility
+                </h3>
+                <p className="text-xs text-sky-200/70 mt-0.5">
+                  Uses credentials from <code className="text-emerald-300 font-mono">~/.invariant/</code> established via <code className="text-cyan-300 font-mono">invariant invite redeem</code> to interact with repositories, layered workspaces, FUSE mounts, and storage slots.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {CLI_SUBCOMMANDS.map((item) => (
+                <div
+                  key={item.cmd}
+                  className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] flex flex-col justify-between gap-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
                     <code className="text-xs font-mono font-semibold text-cyan-300 break-all">
                       {item.cmd}
                     </code>
@@ -899,33 +1181,131 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-sky-100/80 leading-relaxed">
+                  <p className="text-xs text-sky-200/75 leading-relaxed">
                     {item.summary}
                   </p>
                 </div>
-
-                {item.flags && (
-                  <div className="pt-2 border-t border-[#162B54]/70 text-[11px] font-mono text-emerald-300/90">
-                    Flags: {item.flags}
-                  </div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Tab 2: Installing CLI and Services */}
+        {activeCodeTab === 'install' && (
+          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
+              <div>
+                <h3 className="text-sm font-bold text-white">Installing the Client vs. Full Cluster Binaries</h3>
+                <p className="text-xs text-sky-200/70 mt-0.5">
+                  To use an existing service, install <code className="text-cyan-300 font-mono">invariant</code> and <code className="text-cyan-300 font-mono">inv-files</code>. Install all <code className="text-emerald-300 font-mono">cmd/...</code> binaries only if you are hosting a cluster.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCopy(GO_INSTALL_SNIPPET, 'install')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
+              >
+                {copiedId === 'install' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedId === 'install' ? 'Copied' : 'Copy Commands'}</span>
+              </button>
+            </div>
+            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-sky-100 overflow-x-auto leading-relaxed">
+              {GO_INSTALL_SNIPPET}
+            </pre>
+          </div>
+        )}
+
+        {/* Tab 3: Executing Individual Services */}
+        {activeCodeTab === 'exec' && (
+          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
+              <div>
+                <h3 className="text-sm font-bold text-white">Self-Hosting: Running Microservices Directly</h3>
+                <p className="text-xs text-sky-200/70 mt-0.5">
+                  Start individual Go server processes with in-memory, local directory, or S3 storage backends when operating your own cluster.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCopy(SERVICES_EXEC_SNIPPET, 'exec')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
+              >
+                {copiedId === 'exec' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedId === 'exec' ? 'Copied' : 'Copy Commands'}</span>
+              </button>
+            </div>
+            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-sky-100 overflow-x-auto leading-relaxed">
+              {SERVICES_EXEC_SNIPPET}
+            </pre>
+          </div>
+        )}
+
+        {/* Tab 4: services.yaml */}
+        {activeCodeTab === 'yaml' && (
+          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                  Self-Hosting: Declarative Cluster Configuration (<code className="text-cyan-300 font-mono">services.yaml</code>)
+                </h3>
+                <p className="text-xs text-sky-200/70 mt-0.5">
+                  Used by cluster administrators to bootstrap and run a local or remote service mesh via <code className="text-emerald-300 font-mono">invariant provision</code> and <code className="text-emerald-300 font-mono">invariant start</code>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCopy(SERVICES_YAML_SNIPPET, 'yaml')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
+              >
+                {copiedId === 'yaml' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedId === 'yaml' ? 'Copied' : 'Copy YAML'}</span>
+              </button>
+            </div>
+            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-emerald-300 overflow-x-auto leading-relaxed">
+              {SERVICES_YAML_SNIPPET}
+            </pre>
+          </div>
+        )}
+
+        {/* Tab 5: Docker Compose */}
+        {activeCodeTab === 'docker' && (
+          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                  Self-Hosting: Container Topology (<code className="text-cyan-300 font-mono">docker-compose.yml</code>)
+                </h3>
+                <p className="text-xs text-sky-200/70 mt-0.5">
+                  Build all server binaries to <code className="text-cyan-300 font-mono">bin/</code> using <code className="text-emerald-300 font-mono">./build</code> to deploy a self-hosted cluster with Docker Compose.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCopy(DOCKER_COMPOSE_SNIPPET, 'docker')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
+              >
+                {copiedId === 'docker' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedId === 'docker' ? 'Copied' : 'Copy Compose'}</span>
+              </button>
+            </div>
+            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-cyan-300 overflow-x-auto leading-relaxed">
+              {DOCKER_COMPOSE_SNIPPET}
+            </pre>
+          </div>
+        )}
       </section>
 
-      {/* 4. Microservices Architecture & Security Boundary */}
+      {/* 6. Microservices Architecture & Security Boundary */}
       <section id="microservices" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <div className="text-xs font-mono text-emerald-400 mb-2">Modular Service Mesh</div>
+            <div className="text-xs font-mono text-emerald-400 mb-2">Under the Hood · Modular Service Mesh</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Composable Microservices &amp; Trust Boundary
             </h2>
           </div>
           <p className="text-xs text-sky-200/70 max-w-md">
-            Services run independently or together and support dynamic port binding (<code className="text-cyan-300 font-mono">-port 0</code>) to avoid port collisions.
+            Clients only run <code className="text-cyan-300 font-mono">inv-files</code> locally when mounting FUSE/NFS workspaces, while connecting over WireGuard to remote unprivileged cluster services.
           </p>
         </div>
 
@@ -940,7 +1320,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                 Cryptographic Privilege Separation
               </h3>
               <p className="text-xs text-sky-100/80 leading-relaxed max-w-3xl">
-                Only <strong className="text-cyan-300">Files</strong> and <strong className="text-cyan-300">KeyValue</strong> are privileged services because they are initialized with the root <code className="text-emerald-300 font-mono">content-link</code> and hold transitive access to block decryption keys. The <strong className="text-cyan-300">Files</strong> service runs exclusively on the host mounting FUSE or exporting NFS. All other microservices (<strong className="text-white">Storage, Finder, Distribute, Discovery, Slots, Names</strong>) are unprivileged and never have access to unencrypted data.
+                Only <strong className="text-cyan-300">Files</strong> and <strong className="text-cyan-300">KeyValue</strong> are privileged services because they are initialized with the root <code className="text-emerald-300 font-mono">content-link</code> and hold transitive access to block decryption keys. The <strong className="text-cyan-300">Files</strong> service runs exclusively on the client host mounting FUSE or exporting NFS. All remote cluster microservices (<strong className="text-white">Storage, Finder, Distribute, Discovery, Slots, Names</strong>) are unprivileged and never have access to unencrypted data.
               </p>
             </div>
           </div>
@@ -991,227 +1371,6 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
             </table>
           </div>
         </div>
-      </section>
-
-      {/* 5. Interactive CLI Utility & Cluster Configuration Reference */}
-      <section id="cli" className="mx-auto max-w-6xl px-4 sm:px-6 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <div className="text-xs font-mono text-cyan-400 mb-2">Command-Line Orchestration</div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Invariant CLI &amp; Cluster Deployment
-            </h2>
-          </div>
-
-          {/* Interactive Filter / Tab Controls */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#07112B] border border-[#162B54] rounded-xl">
-            <button
-              type="button"
-              onClick={() => setActiveCodeTab('cli')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
-                activeCodeTab === 'cli'
-                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
-                  : 'text-sky-200/70 hover:text-white'
-              }`}
-            >
-              invariant CLI
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveCodeTab('install')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
-                activeCodeTab === 'install'
-                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
-                  : 'text-sky-200/70 hover:text-white'
-              }`}
-            >
-              go install
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveCodeTab('exec')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
-                activeCodeTab === 'exec'
-                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
-                  : 'text-sky-200/70 hover:text-white'
-              }`}
-            >
-              Executing Services
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveCodeTab('yaml')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
-                activeCodeTab === 'yaml'
-                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
-                  : 'text-sky-200/70 hover:text-white'
-              }`}
-            >
-              services.yaml
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveCodeTab('docker')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all whitespace-nowrap shrink-0 ${
-                activeCodeTab === 'docker'
-                  ? 'bg-gradient-to-r from-sky-500 via-cyan-400 to-emerald-400 text-[#03091E] font-semibold'
-                  : 'text-sky-200/70 hover:text-white'
-              }`}
-            >
-              Docker Compose
-            </button>
-          </div>
-        </div>
-
-        {/* Tab 1: CLI Subcommands */}
-        {activeCodeTab === 'cli' && (
-          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#162B54]">
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  The <code className="text-cyan-300 font-mono">invariant</code> CLI Utility
-                </h3>
-                <p className="text-xs text-sky-200/70 mt-0.5">
-                  Reads global configuration from <code className="text-emerald-300 font-mono">~/.invariant/config.yaml</code> and orchestrates cluster provisioning, invitations, storage, slots, mounts, layered workspaces, and CAS version control repositories.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {CLI_SUBCOMMANDS.map((item) => (
-                <div
-                  key={item.cmd}
-                  className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] flex flex-col justify-between gap-2"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <code className="text-xs font-mono font-semibold text-cyan-300 break-all">
-                      {item.cmd}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(item.cmd, item.cmd)}
-                      className="text-sky-300/60 hover:text-cyan-300 p-1 shrink-0 transition-colors"
-                      title="Copy command"
-                    >
-                      {copiedId === item.cmd ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-400" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-xs text-sky-200/75 leading-relaxed">
-                    {item.summary}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Installing CLI and Services */}
-        {activeCodeTab === 'install' && (
-          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
-              <div>
-                <h3 className="text-sm font-bold text-white">Installing the CLI and Services</h3>
-                <p className="text-xs text-sky-200/70 mt-0.5">
-                  Compile and install the <code className="text-cyan-300 font-mono">invariant</code> CLI and <code className="text-emerald-300 font-mono">inv-*</code> microservice commands using the Go toolchain, or pass <code className="text-cyan-300 font-mono">--install</code> to <code className="text-cyan-300 font-mono">invariant provision</code>.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy(GO_INSTALL_SNIPPET, 'install')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
-              >
-                {copiedId === 'install' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copiedId === 'install' ? 'Copied' : 'Copy Commands'}</span>
-              </button>
-            </div>
-            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-sky-100 overflow-x-auto leading-relaxed">
-              {GO_INSTALL_SNIPPET}
-            </pre>
-          </div>
-        )}
-
-        {/* Tab 3: Executing Individual Services */}
-        {activeCodeTab === 'exec' && (
-          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
-              <div>
-                <h3 className="text-sm font-bold text-white">Running Microservices Directly</h3>
-                <p className="text-xs text-sky-200/70 mt-0.5">
-                  Start individual Go services with in-memory, local directory, or S3 storage backends.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy(SERVICES_EXEC_SNIPPET, 'exec')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
-              >
-                {copiedId === 'exec' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copiedId === 'exec' ? 'Copied' : 'Copy Commands'}</span>
-              </button>
-            </div>
-            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-sky-100 overflow-x-auto leading-relaxed">
-              {SERVICES_EXEC_SNIPPET}
-            </pre>
-          </div>
-        )}
-
-        {/* Tab 4: services.yaml */}
-        {activeCodeTab === 'yaml' && (
-          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  Declarative Cluster Configuration (<code className="text-cyan-300 font-mono">services.yaml</code>)
-                </h3>
-                <p className="text-xs text-sky-200/70 mt-0.5">
-                  Supports an <code className="text-emerald-300 font-mono">environment</code> map with <code className="text-emerald-300 font-mono">$key:&lt;filename&gt;</code> substitution from <code className="text-emerald-300 font-mono">~/.invariant/keys/</code> so secrets never appear in config files.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy(SERVICES_YAML_SNIPPET, 'yaml')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
-              >
-                {copiedId === 'yaml' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copiedId === 'yaml' ? 'Copied' : 'Copy YAML'}</span>
-              </button>
-            </div>
-            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-emerald-300 overflow-x-auto leading-relaxed">
-              {SERVICES_YAML_SNIPPET}
-            </pre>
-          </div>
-        )}
-
-        {/* Tab 5: Docker Compose */}
-        {activeCodeTab === 'docker' && (
-          <div className="bg-[#07112B] border border-[#162B54] rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#162B54]">
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  Production Container Topology (<code className="text-cyan-300 font-mono">docker-compose.yml</code>)
-                </h3>
-                <p className="text-xs text-sky-200/70 mt-0.5">
-                  Build all binaries to <code className="text-cyan-300 font-mono">bin/</code> using <code className="text-emerald-300 font-mono">./build</code> and verify with <code className="text-emerald-300 font-mono">go test -v ./...</code>.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy(DOCKER_COMPOSE_SNIPPET, 'docker')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#03091E] border border-[#162B54] text-xs text-cyan-300 hover:border-cyan-400/50 transition-colors shrink-0"
-              >
-                {copiedId === 'docker' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>{copiedId === 'docker' ? 'Copied' : 'Copy Compose'}</span>
-              </button>
-            </div>
-            <pre className="p-4 rounded-xl bg-[#03091E] border border-[#162B54] font-mono text-xs text-cyan-300 overflow-x-auto leading-relaxed">
-              {DOCKER_COMPOSE_SNIPPET}
-            </pre>
-          </div>
-        )}
       </section>
     </div>
   );
