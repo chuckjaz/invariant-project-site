@@ -79,7 +79,9 @@ export const IdentityVerifiedScreen: React.FC<IdentityVerifiedScreenProps> = ({
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const cliCommand = `invariant auth verify ${assertion.code}`;
+  const cliCommand = assertion.invite
+    ? `invariant invite redeem "${assertion.invite}" --token ${assertion.code}`
+    : `invariant login --token ${assertion.code}`;
 
   const handleCopyCommand = () => {
     navigator.clipboard.writeText(cliCommand);
@@ -237,7 +239,16 @@ export const IdentityVerifiedScreen: React.FC<IdentityVerifiedScreenProps> = ({
         <div className="mt-6 pt-5 border-t border-slate-800/80 flex items-start gap-2.5 text-xs text-slate-400">
           <ShieldCheck className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
           <p className="leading-relaxed text-[11px]">
-            <strong className="text-slate-300">Identity established.</strong> Invariant core services will issue scoped downstream access tokens and verify permissions directly via your CLI session.
+            <strong className="text-slate-300">OAuth2 Identity Verified.</strong>{' '}
+            {assertion.invite ? (
+              <>
+                <code className="text-slate-200">invariant invite redeem</code> validates this OAuth2 email (<code className="text-emerald-300">{assertion.identity.email}</code>) against the invitation and exchanges it with <code className="text-cyan-300">{assertion.controlPlaneUrl || 'inv-discovery'}</code> for a WireGuard-pinned access token (<code className="text-slate-200">~/.invariant/keys/client.token</code>).
+              </>
+            ) : (
+              <>
+                <code className="text-slate-200">invariant login</code> saves your verified OAuth2 credentials to <code className="text-slate-200">~/.invariant/oauth_token.json</code>, which <code className="text-slate-200">invariant invite redeem</code> uses to verify your email against single-use control plane invitations (<code className="text-slate-200">inv_invite_...@itp://...</code>).
+              </>
+            )}
           </p>
         </div>
 

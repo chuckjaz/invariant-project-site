@@ -4,9 +4,11 @@ import {
   AlertCircle,
   ShieldCheck,
   ArrowRight,
-  ExternalLink,
+  KeyRound,
+  MailCheck,
 } from 'lucide-react';
 import { OAuthParams, UserIdentity } from '../types/auth';
+import { parseInvitationCode } from '../utils/crypto';
 
 interface IdentityAuthCardProps {
   oauthParams: OAuthParams;
@@ -19,6 +21,9 @@ export const IdentityAuthCard: React.FC<IdentityAuthCardProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const parsedInvite = parseInvitationCode(oauthParams.invite);
+  const expectedEmail = oauthParams.expectedEmail?.trim();
 
   const handleProviderLogin = (provider: 'google' | 'github') => {
     setErrorMessage(null);
@@ -48,6 +53,17 @@ export const IdentityAuthCard: React.FC<IdentityAuthCardProps> = ({
               emailVerified: true,
               authTime: Date.now(),
             };
+
+      if (
+        expectedEmail &&
+        identity.email.toLowerCase() !== expectedEmail.toLowerCase()
+      ) {
+        setErrorMessage(
+          `OAuth email mismatch: authenticated as "${identity.email}", but invitation requires "${expectedEmail}". Single-use invitation was not consumed.`
+        );
+        return;
+      }
+
       onSuccess(identity);
     }, 600);
   };
@@ -70,8 +86,28 @@ export const IdentityAuthCard: React.FC<IdentityAuthCardProps> = ({
             Verify Invariant Identity
           </h1>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Select an authorized OAuth identity provider to authenticate the <code className="text-slate-300">invariant</code> CLI on this workstation.
+            Authenticate via OAuth 2.0 to validate your email identity for <code className="text-slate-300">invariant login</code>.
           </p>
+
+          {parsedInvite && (
+            <div className="mt-4 p-3 rounded-lg bg-indigo-950/30 border border-indigo-500/30 space-y-1.5 text-[11px]">
+              <div className="flex items-center gap-1.5 font-semibold text-indigo-300">
+                <KeyRound className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                <span>Redeeming Control Plane Invitation</span>
+              </div>
+              {parsedInvite.controlPlaneUrl && (
+                <div className="font-mono text-slate-300 truncate">
+                  Control Plane: <span className="text-cyan-300">{parsedInvite.controlPlaneUrl}</span>
+                </div>
+              )}
+              {expectedEmail && (
+                <div className="flex items-center gap-1.5 font-mono text-slate-300">
+                  <MailCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span>Required Email: <span className="text-emerald-300">{expectedEmail}</span></span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Error Alert */}
@@ -166,7 +202,7 @@ export const IdentityAuthCard: React.FC<IdentityAuthCardProps> = ({
         <div className="mt-6 pt-5 border-t border-slate-800/80 flex items-start gap-2.5 text-slate-400">
           <ShieldCheck className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
           <p className="text-[11px] leading-relaxed">
-            <strong className="text-slate-300">User Identification Only:</strong> The OAuth flow verifies who you are. All permissions and access tokens for Invariant services are governed internally by Invariant upon receipt of this identity assertion.
+            <strong className="text-slate-300">OAuth2 + Invitation Binding:</strong> <code className="text-slate-300">invariant login</code> validates your OAuth2 credentials, and <code className="text-slate-300">invariant invite redeem</code> verifies that your authenticated email matches your single-use control plane invitation (<code className="text-slate-300">inv_invite_...@itp://...</code>) before issuing a WireGuard-pinned access token.
           </p>
         </div>
       </div>

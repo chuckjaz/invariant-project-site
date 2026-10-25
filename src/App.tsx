@@ -23,13 +23,15 @@ export default function App() {
 
     const searchParams = new URLSearchParams(window.location.search);
     const clientId = searchParams.get('client_id') || 'invariant-cli';
-    const redirectUri = searchParams.get('redirect_uri') || 'http://localhost:8085/callback';
+    const redirectUri = searchParams.get('redirect_uri') || 'http://127.0.0.1:8085/callback';
     const state = searchParams.get('state') || 'st_' + generateRandomString(12);
     const nonce = searchParams.get('nonce') || undefined;
     const responseType = searchParams.get('response_type') || 'code';
     const codeChallenge = searchParams.get('code_challenge') || undefined;
     const codeChallengeMethod = searchParams.get('code_challenge_method') || undefined;
     const prompt = searchParams.get('prompt') || undefined;
+    const invite = searchParams.get('invite') || undefined;
+    const expectedEmail = searchParams.get('email') || undefined;
 
     return {
       clientId,
@@ -40,6 +42,8 @@ export default function App() {
       codeChallenge,
       codeChallengeMethod,
       prompt,
+      invite,
+      expectedEmail,
       isHeadlessMode: !redirectUri,
     };
   }, []);
@@ -60,6 +64,10 @@ export default function App() {
     if (params.state) url.searchParams.set('state', params.state);
     if (params.nonce) url.searchParams.set('nonce', params.nonce);
     else url.searchParams.delete('nonce');
+    if (params.invite) url.searchParams.set('invite', params.invite);
+    else url.searchParams.delete('invite');
+    if (params.expectedEmail) url.searchParams.set('email', params.expectedEmail);
+    else url.searchParams.delete('email');
 
     window.history.replaceState({}, '', url.toString());
   }, []);
@@ -73,12 +81,14 @@ export default function App() {
   };
 
   const handleResetParams = () => {
-    const reset = {
+    const reset: OAuthParams = {
       clientId: 'invariant-cli',
-      redirectUri: 'http://localhost:8085/callback',
+      redirectUri: 'http://127.0.0.1:8085/callback',
       state: 'st_' + generateRandomString(12),
       nonce: 'nc_' + generateRandomString(10),
       responseType: 'code',
+      invite: undefined,
+      expectedEmail: undefined,
       isHeadlessMode: false,
     };
     setOAuthParams(reset);
@@ -91,7 +101,8 @@ export default function App() {
       identity,
       oauthParams.state,
       oauthParams.clientId,
-      oauthParams.nonce
+      oauthParams.nonce,
+      oauthParams.invite
     );
     setAssertion(newAssertion);
     setLastTerminalAssertion(newAssertion);
