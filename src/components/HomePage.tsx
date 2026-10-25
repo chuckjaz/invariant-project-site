@@ -77,14 +77,6 @@ const MICROSERVICES: MicroserviceSpec[] = [
       'Binds human-readable logical names to 64-character hex IDs (such as mapping device IDs or mutable slot IDs to service names) with optional DNS and upstream delegation.',
   },
   {
-    name: 'Files',
-    command: 'inv-files',
-    privilege: 'Privileged',
-    role: 'FUSE Mount & Native NFS Backing',
-    description:
-      'Backing service for the FUSE file system and native NFS server. Initialized with the root content-link and transitive decryption keys; runs strictly on the mounting host.',
-  },
-  {
     name: 'KeyValue',
     command: 'inv-kv',
     privilege: 'Privileged',
@@ -400,7 +392,6 @@ const CLI_SUBCOMMANDS = [
 ];
 
 const CLIENT_INSTALL_SNIPPET = `go install github.com/chuckjaz/invariant-go/cmd/invariant@latest
-go install github.com/chuckjaz/invariant-go/cmd/inv-files@latest
 alias ir="invariant repository"`;
 
 const CLIENT_REDEEM_SNIPPET = `invariant login
@@ -587,7 +578,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                 </div>
                 <div>
                   <div className="font-mono font-semibold text-emerald-300 tabular-nums">2. Install CLI</div>
-                  <div className="text-sky-200/60 mt-0.5">invariant &amp; inv-files</div>
+                  <div className="text-sky-200/60 mt-0.5">invariant</div>
                 </div>
                 <div>
                   <div className="font-mono font-semibold text-sky-300 tabular-nums">3. Redeem &amp; Work</div>
@@ -627,9 +618,6 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
                       <div className="text-sky-300/50"># 1. Install CLI &amp; set alias</div>
                       <div>
                         <span className="text-cyan-400">$</span> go install github.com/chuckjaz/invariant-go/cmd/invariant@latest
-                      </div>
-                      <div>
-                        <span className="text-cyan-400">$</span> go install github.com/chuckjaz/invariant-go/cmd/inv-files@latest
                       </div>
                       <div>
                         <span className="text-cyan-400">$</span> alias ir=&quot;invariant repository&quot;
@@ -1197,7 +1185,7 @@ export const HomePage: React.FC<HomePageProps> = ({ logoUrl }) => {
               <div>
                 <h3 className="text-sm font-bold text-white">Installing the Client vs. Full Cluster Binaries</h3>
                 <p className="text-xs text-sky-200/70 mt-0.5">
-                  To use an existing service, install <code className="text-cyan-300 font-mono">invariant</code> and <code className="text-cyan-300 font-mono">inv-files</code>. Install all <code className="text-emerald-300 font-mono">cmd/...</code> binaries only if you are hosting a cluster.
+                  To use an existing service, install <code className="text-cyan-300 font-mono">invariant</code>. Install all <code className="text-emerald-300 font-mono">cmd/...</code> binaries only if you are hosting a cluster.
                 </p>
               </div>
               <button
