@@ -1,4 +1,22 @@
-import { UserIdentity, IdentityAssertion } from '../types/auth';
+import { UserIdentity, IdentityAssertion, ParsedInvitation } from '../types/auth';
+
+/**
+ * Parse an Invariant invitation string of the form "inv_invite_<hex>@<control-plane-url>"
+ */
+export function parseInvitationCode(invite?: string): ParsedInvitation | null {
+  if (!invite || !invite.trim()) {
+    return null;
+  }
+  const trimmed = invite.trim();
+  const atIdx = trimmed.indexOf('@');
+  if (atIdx !== -1) {
+    return {
+      rawCode: trimmed.slice(0, atIdx).trim(),
+      controlPlaneUrl: trimmed.slice(atIdx + 1).trim() || undefined,
+    };
+  }
+  return { rawCode: trimmed };
+}
 
 /**
  * Generate a random alphanumeric string for codes and state
@@ -75,15 +93,19 @@ export function createIdentityAssertion(
   identity: UserIdentity,
   state: string,
   clientId: string,
-  nonce?: string
+  nonce?: string,
+  invite?: string
 ): IdentityAssertion {
   const code = `inv_id_${generateRandomString(24)}`;
   const idToken = generateIdToken(identity, clientId, nonce);
+  const parsed = parseInvitationCode(invite);
 
   return {
     code,
     state,
     nonce,
+    invite: invite?.trim() || undefined,
+    controlPlaneUrl: parsed?.controlPlaneUrl,
     identity,
     idToken,
     expiresIn: 300,
