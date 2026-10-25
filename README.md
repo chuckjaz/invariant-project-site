@@ -4,10 +4,10 @@ A static-first OAuth identity verification interface for `invariantproject.com`,
 
 ## Overview
 
-- **OAuth2 Identity Verification & Invitation Binding**: Confirms user identity (OpenID Connect / UserInfo email verification) via OAuth2 identity providers (Google and GitHub). When redeeming a single-use user invitation (`inv_invite_<hex>@itp://tc1...`) via `invariant invite redeem`, `invariant` validates the user's OAuth2 credentials, verifies that the authenticated OAuth2 email matches the email bound to the invitation, and exchanges the invitation and WireGuard node public key with the control plane (`inv-discovery`) for a WireGuard-pinned access token (`inv_at_...`).
+- **Pure Identity Verification**: Confirms user identity (OpenID Connect / ID assertion) via OAuth identity providers (Google and GitHub). It does not grant service authorization or permission scopes; all authorization and downstream tokens are managed internally by Invariant services once identity is verified.
 - **RFC 8252 Native App Support**:
-  - **Automated Localhost Loopback**: Returns authorization credentials to the local terminal listener (e.g. `http://127.0.0.1:8085/callback`).
-  - **Manual / Headless Mode**: Displays a copyable token and `invariant login` / `invariant invite redeem` command for remote SSH, Docker container, or headless terminal sessions.
+  - **Automated Localhost Loopback**: Returns authorization credentials to the local terminal listener (e.g. `http://localhost:8085/callback`).
+  - **Manual Copy Fallback**: Displays a copyable one-time verification code for remote SSH, Docker container, or headless terminal sessions.
 - **100% Static Deployment**: Requires zero backend server runtime. The compiled bundle consists exclusively of static HTML, CSS, and JavaScript files hostable on any static CDN or file hosting platform.
 
 ---
@@ -134,45 +134,20 @@ npm run preview
 
 ---
 
-## CLI & Service Installation
-
-Install the `invariant` CLI and the `inv-*` microservices (`inv-discovery`, `inv-names`, `inv-slots`, `inv-storage`, `inv-finder`, `inv-distribute`, `inv-kv`, `inv-files`) using `go install`:
-
-```bash
-# Install the CLI and all microservices at once
-go install github.com/chuckjaz/invariant-go/cmd/...@latest
-
-# Provision control-plane and service tokens (auto-installing any missing inv-* commands)
-invariant provision --install services.yaml
-
-# Start all configured services
-invariant start services.yaml
-```
-
----
-
 ## CLI Integration Protocol
 
-The `invariant login` command initiates the OAuth2 flow by launching the user's browser with standard OAuth 2.0 / OIDC parameters:
+The `invariant` command-line tool initiates the flow by launching the user's browser with standard OAuth 2.0 / OIDC parameters:
 
 ```bash
-https://invariantproject.com/?client_id=invariant-cli&redirect_uri=http://127.0.0.1:8085/callback&state=<RANDOM_STATE>&nonce=<RANDOM_NONCE>&response_type=code
+https://invariantproject.com/?client_id=invariant-cli&redirect_uri=http://localhost:8085/callback&state=<RANDOM_STATE>&nonce=<RANDOM_NONCE>&response_type=code
 ```
-
-When redeeming a single-use control-plane invitation created with `invariant invite create --role user --name <name> --email <email>`, the user runs:
-
-```bash
-invariant invite redeem "inv_invite_<hex>@itp://tc1<discovery-nodekey>:3003"
-```
-
-`invariant invite redeem` validates the user's OAuth2 credentials against the OAuth2 UserInfo endpoint, verifies that the authenticated email matches the invitation email, and redeems the invitation against the embedded control plane (`itp://tc1...`) to store a WireGuard-pinned access token in `~/.invariant/keys/client.token` and control plane address in `~/.invariant/keys/client.discovery`.
 
 ### Parameter Reference
 
 | Parameter | Required | Description |
 | :--- | :--- | :--- |
 | `client_id` | Yes | Identifier for the client (default: `invariant-cli`). |
-| `redirect_uri` | Optional | Loopback address (e.g. `http://127.0.0.1:8085/callback`). If omitted, headless manual copy mode is engaged. |
+| `redirect_uri` | Optional | Loopback address (e.g. `http://localhost:8085/callback`). If omitted, headless manual copy mode is engaged. |
 | `state` | Recommended | Anti-CSRF token verified by the CLI upon receiving callback. |
 | `nonce` | Optional | Replay-protection token embedded into the identity assertion payload. |
 | `response_type` | Yes | Defaults to `code`. |
@@ -181,10 +156,9 @@ invariant invite redeem "inv_invite_<hex>@itp://tc1<discovery-nodekey>:3003"
 
 - **Loopback Mode**: When `redirect_uri` points to `localhost` or `127.0.0.1`, the page notifies the local listener:
   ```
-  GET http://127.0.0.1:8085/callback?code=inv_id_...&state=...
+  GET http://localhost:8085/callback?code=inv_id_...&state=...
   ```
-- **Headless Mode**: When running in remote SSH or containerized terminals, the page provides the verification token and the terminal command:
+- **Headless Mode**: When running in remote SSH or containerized terminals, the page provides the verification code and the terminal command:
   ```bash
-  invariant login --token inv_id_...
-  invariant invite redeem "inv_invite_<hex>@itp://..." --token inv_id_...
+  invariant auth verify inv_id_...
   ```

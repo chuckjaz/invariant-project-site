@@ -183,29 +183,29 @@ export const CliSimulatorBar: React.FC<CliSimulatorBarProps> = ({
           </div>
 
           <div className="space-y-1 text-slate-300">
-            <div className="text-slate-400">$ invariant login</div>
+            <div className="text-slate-400">$ invariant auth login</div>
             {oauthParams.redirectUri ? (
               <div className="text-slate-400">
                 [CLI] Starting local HTTP listener on <span className="text-cyan-400">{oauthParams.redirectUri}</span>
               </div>
             ) : (
               <div className="text-amber-400/90">
-                [CLI] Headless terminal detected. Authenticate in your browser and pass --token to invariant.
+                [CLI] Headless terminal detected. Please authenticate in your browser and paste the verification code.
               </div>
             )}
             <div className="text-slate-500">
-              [CLI] Opening browser to https://invariantproject.com/?client_id={oauthParams.clientId}...
+              [CLI] Opening browser to https://invariantproject.com/login?client_id={oauthParams.clientId}...
             </div>
 
             {lastAssertion ? (
               <div className="pt-2 text-emerald-400 space-y-1">
-                <div>[CLI] Received OAuth2 authorization code: {lastAssertion.code}</div>
+                <div>[CLI] Received verified identity code: {lastAssertion.code}</div>
                 <div>[CLI] State parameter confirmed: {lastAssertion.state}</div>
                 <div>
-                  [CLI] Validated OAuth2 UserInfo: <span className="text-white font-semibold">{lastAssertion.identity.name}</span> ({lastAssertion.identity.email})
+                  [CLI] User identity verified: <span className="text-white font-semibold">{lastAssertion.identity.name}</span> ({lastAssertion.identity.email})
                 </div>
                 <div className="text-indigo-400">
-                  [CLI] Verified OAuth credentials saved to ~/.invariant/oauth_token.json (ready for `invariant invite redeem`).
+                  [CLI] Transmitting identity assertion to Invariant Core Service for authorization token issuance...
                 </div>
                 <div className="text-emerald-300 font-semibold">
                   [CLI] Ready. You are now logged into Invariant.
@@ -213,7 +213,7 @@ export const CliSimulatorBar: React.FC<CliSimulatorBarProps> = ({
               </div>
             ) : (
               <div className="text-slate-500 italic pt-1">
-                [CLI] Awaiting user OAuth2 authentication in browser...
+                [CLI] Awaiting user authentication in browser...
               </div>
             )}
           </div>
